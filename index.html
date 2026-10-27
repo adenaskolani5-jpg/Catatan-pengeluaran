@@ -11,27 +11,79 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --emerald: #34d399; --rose: #fb7185; --sky: #38bdf8;
-    --amber: #fbbf24; --violet: #a78bfa;
-    --bg: #080b12; --text: #e8edf7; --dim: #8a97b1; --mute: #5a6684;
-    --card: linear-gradient(180deg, rgba(22,29,45,0.75), rgba(15,21,34,0.78));
-    --card-solid: #0f1522;
-    --border: rgba(255,255,255,0.06); --border-2: rgba(255,255,255,0.10);
-    --overlay: rgba(2,5,10,0.6);
-    --shadow-lg: 0 24px 50px -30px rgba(0,0,0,.8);
-    --sidebar-w: 224px;
-  }
-  [data-theme="light"] {
-    --emerald: #059669; --rose: #e11d48; --sky: #0284c7;
-    --amber: #d97706; --violet: #7c3aed;
-    --bg: #f5f7fb; --text: #0f172a; --dim: #5a6684; --mute: #94a3b8;
-    --card: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,250,252,0.92));
-    --card-solid: #ffffff;
-    --border: rgba(15,23,42,0.08); --border-2: rgba(15,23,42,0.14);
-    --overlay: rgba(15,23,42,0.35);
-    --shadow-lg: 0 24px 50px -30px rgba(15,23,42,0.25);
-  }
+:root {
+  /* ==== Warna aksen (vibrant) ==== */
+  --emerald: #34d399; --emerald-deep: #10b981;
+  --rose:    #fb7185; --rose-deep:    #f43f5e;
+  --sky:     #38bdf8; --sky-deep:     #0ea5e9;
+  --amber:   #fbbf24; --amber-deep:   #f59e0b;
+  --violet:  #a78bfa; --violet-deep:  #8b5cf6;
+  --pink:    #f472b6;
+
+  /* ==== Background (rich, tidak flat) ==== */
+  --bg: #070b14;
+  --bg-elev: #0c1220;
+  --text: #eef2f8;
+  --dim: #94a3b8;
+  --mute: #64748b;
+
+  /* ==== Card & surface ==== */
+  --card: linear-gradient(160deg, rgba(30,41,59,0.55) 0%, rgba(15,23,42,0.75) 100%);
+  --card-solid: #0d1420;
+  --card-elev: linear-gradient(160deg, rgba(38,50,71,0.6), rgba(20,28,45,0.78));
+  --border: rgba(148,163,184,0.08);
+  --border-2: rgba(148,163,184,0.16);
+  --overlay: rgba(2,5,10,0.65);
+
+  /* ==== Shadow berlapis (soft + deep) ==== */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md: 0 10px 30px -10px rgba(0,0,0,0.55);
+  --shadow-lg: 0 30px 70px -25px rgba(0,0,0,0.75);
+  --ring-emerald: 0 0 0 3px rgba(52,211,153,0.15);
+
+  /* ==== Radius konsisten ==== */
+  --r-sm: 10px; --r-md: 14px; --r-lg: 20px; --r-xl: 26px;
+
+  /* ==== Gradient siap pakai ==== */
+  --grad-emerald: linear-gradient(135deg, #34d399, #10b981 55%, #059669);
+  --grad-rose:    linear-gradient(135deg, #fb7185, #f43f5e);
+  --grad-sky:     linear-gradient(135deg, #38bdf8, #0ea5e9);
+  --grad-violet:  linear-gradient(135deg, #a78bfa, #8b5cf6);
+  --grad-amber:   linear-gradient(135deg, #fbbf24, #f59e0b);
+
+  --sidebar-w: 232px;
+}
+[data-theme="light"] {
+  --emerald: #059669; --emerald-deep: #047857;
+  --rose:    #e11d48; --rose-deep:    #be123c;
+  --sky:     #0284c7; --sky-deep:     #0369a1;
+  --amber:   #d97706; --amber-deep:   #b45309;
+  --violet:  #7c3aed; --violet-deep:  #6d28d9;
+
+  --bg: #f4f6fb;
+  --bg-elev: #ffffff;
+  --text: #0f172a;
+  --dim: #475569;
+  --mute: #94a3b8;
+
+  --card: linear-gradient(160deg, rgba(255,255,255,0.96) 0%, rgba(248,250,252,0.92) 100%);
+  --card-solid: #ffffff;
+  --card-elev: linear-gradient(160deg, rgba(255,255,255,0.99), rgba(248,250,252,0.96));
+  --border: rgba(15,23,42,0.07);
+  --border-2: rgba(15,23,42,0.13);
+  --overlay: rgba(15,23,42,0.35);
+
+  --shadow-sm: 0 1px 3px rgba(15,23,42,0.06);
+  --shadow-md: 0 10px 30px -10px rgba(15,23,42,0.15);
+  --shadow-lg: 0 30px 70px -25px rgba(15,23,42,0.22);
+  --ring-emerald: 0 0 0 3px rgba(5,150,105,0.15);
+
+  --grad-emerald: linear-gradient(135deg, #10b981, #059669);
+  --grad-rose:    linear-gradient(135deg, #f43f5e, #e11d48);
+  --grad-sky:     linear-gradient(135deg, #0ea5e9, #0284c7);
+  --grad-violet:  linear-gradient(135deg, #8b5cf6, #7c3aed);
+  --grad-amber:   linear-gradient(135deg, #f59e0b, #d97706);
+}
   html { transition: background-color .4s; }
   html, body { overflow-x: hidden; }
   body {
@@ -713,6 +765,542 @@
     .bottom-nav .nav-btn { font-size: 9.5px; }
     .theme-segmented { grid-template-columns: repeat(2, 1fr); }
   }
+  /* ============================================================
+   MODERN ENHANCEMENTS — layer di atas style existing
+   ============================================================ */
+
+/* --- Background aurora lebih berwarna --- */
+.aurora {
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(30,58,138,0.35) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 100%, rgba(6,95,70,0.35) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 50%, rgba(124,58,237,0.10) 0%, transparent 65%),
+    var(--bg);
+}
+.aurora::before {
+  background: radial-gradient(circle, #1e3a8a 0%, #312e81 35%, transparent 70%);
+  opacity: 0.55;
+}
+.aurora::after {
+  background: radial-gradient(circle, #065f46 0%, #0e7490 40%, transparent 70%);
+  opacity: 0.5;
+}
+[data-theme="light"] .aurora {
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(191,219,254,0.55) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 100%, rgba(167,243,208,0.55) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 50%, rgba(221,214,254,0.35) 0%, transparent 65%),
+    var(--bg);
+}
+[data-theme="light"] .aurora::before {
+  background: radial-gradient(circle, #bfdbfe 0%, #c7d2fe 40%, transparent 70%);
+  opacity: 0.9;
+}
+[data-theme="light"] .aurora::after {
+  background: radial-gradient(circle, #a7f3d0 0%, #bae6fd 40%, transparent 70%);
+  opacity: 0.85;
+}
+
+/* --- Gradient border tipis pada card & stat --- */
+.card, .stat {
+  position: relative;
+  isolation: isolate;
+}
+.card::before, .stat::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0.14) 0%,
+    rgba(255,255,255,0.02) 30%,
+    transparent 55%,
+    rgba(255,255,255,0.06) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
+}
+[data-theme="light"] .card::before,
+[data-theme="light"] .stat::before {
+  background: linear-gradient(135deg,
+    rgba(255,255,255,1) 0%,
+    rgba(15,23,42,0.04) 40%,
+    transparent 60%,
+    rgba(15,23,42,0.05) 100%);
+}
+
+/* --- Shadow lebih berkarakter --- */
+.stat { box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), var(--shadow-lg); }
+.card { box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), var(--shadow-lg); }
+[data-theme="light"] .stat,
+[data-theme="light"] .card {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), var(--shadow-md);
+}
+
+/* --- Stat card: padding & hierarki lebih rapi --- */
+.stat { padding: 22px 24px; }
+.stat-label { font-size: 11px; letter-spacing: 0.08em; }
+.stat-value {
+  font-size: clamp(20px, 4.6vw, 27px);
+  letter-spacing: -0.035em;
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Gradient text pada nilai statistik --- */
+.stat.income .stat-value {
+  background: linear-gradient(135deg, #6ee7b7, #34d399 55%, #10b981);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.stat.expense .stat-value {
+  background: linear-gradient(135deg, #fda4af, #fb7185 55%, #f43f5e);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.stat.balance .stat-value.pos {
+  background: linear-gradient(135deg, #6ee7b7, #34d399 55%, #10b981);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.stat.balance .stat-value.neg {
+  background: linear-gradient(135deg, #fda4af, #fb7185 55%, #f43f5e);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.stat.balance .stat-value.zero {
+  background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+[data-theme="light"] .stat.income .stat-value,
+[data-theme="light"] .stat.balance .stat-value.pos {
+  background: linear-gradient(135deg, #10b981, #059669);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+[data-theme="light"] .stat.expense .stat-value,
+[data-theme="light"] .stat.balance .stat-value.neg {
+  background: linear-gradient(135deg, #fb7185, #e11d48);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* --- Dot indikator lebih hidup --- */
+.stat.income .dot { box-shadow: 0 0 12px var(--emerald), 0 0 4px var(--emerald); }
+.stat.expense .dot { box-shadow: 0 0 12px var(--rose), 0 0 4px var(--rose); }
+.stat.balance .dot { box-shadow: 0 0 12px var(--violet), 0 0 4px var(--violet); }
+
+/* --- Logo lebih vibrant --- */
+.logo {
+  background: linear-gradient(135deg, #34d399, #38bdf8 50%, #a78bfa);
+  box-shadow: 0 10px 30px -8px rgba(52,211,153,0.5),
+              inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+/* --- Tombol primary: gradient + inner highlight --- */
+.btn-primary {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 55%, #059669 100%);
+  box-shadow: 0 14px 34px -14px rgba(52,211,153,0.7),
+              inset 0 1px 0 rgba(255,255,255,0.32);
+  letter-spacing: -0.005em;
+}
+.btn-primary:hover {
+  box-shadow: 0 20px 44px -14px rgba(52,211,153,0.85),
+              inset 0 1px 0 rgba(255,255,255,0.35);
+}
+[data-theme="light"] .btn-primary {
+  box-shadow: 0 14px 30px -12px rgba(5,150,105,0.5),
+              inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+/* --- Month nav & segmented lebih refined --- */
+.month-nav {
+  background: var(--card-elev);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.segmented button.active[data-type="expense"] {
+  background: linear-gradient(135deg, #fb7185, #f43f5e);
+  box-shadow: 0 8px 22px -8px rgba(244,63,94,0.7),
+              inset 0 1px 0 rgba(255,255,255,0.25);
+}
+.segmented button.active[data-type="income"] {
+  background: linear-gradient(135deg, #34d399, #10b981);
+  box-shadow: 0 8px 22px -8px rgba(16,185,129,0.7),
+              inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+/* --- Nav sidebar: state aktif pakai gradient --- */
+.nav-btn.active {
+  background: linear-gradient(90deg, rgba(52,211,153,0.16), rgba(52,211,153,0.04));
+  box-shadow: inset 0 0 0 1px rgba(52,211,153,0.16);
+}
+
+/* --- Input: focus ring lebih lembut --- */
+.input:focus {
+  border-color: rgba(52,211,153,0.5);
+  box-shadow: 0 0 0 4px rgba(52,211,153,0.12),
+              inset 0 1px 2px rgba(0,0,0,0.05);
+  background: rgba(52,211,153,0.02);
+}
+
+/* --- Category tabs: glow lebih dalam --- */
+.cat-tab.active {
+  box-shadow: 0 14px 30px -14px var(--c),
+              inset 0 0 0 1px var(--c);
+}
+
+/* --- Status badge --- */
+.status-badge.settled {
+  background: linear-gradient(135deg, rgba(52,211,153,0.16), rgba(52,211,153,0.05));
+  box-shadow: inset 0 0 0 1px rgba(52,211,153,0.28),
+              0 4px 12px -6px rgba(52,211,153,0.4);
+}
+.status-badge.pending {
+  background: linear-gradient(135deg, rgba(251,113,133,0.16), rgba(251,113,133,0.05));
+  box-shadow: inset 0 0 0 1px rgba(251,113,133,0.28),
+              0 4px 12px -6px rgba(251,113,133,0.4);
+}
+
+/* --- Transaksi: hover gradient + icon glow --- */
+.tx:hover {
+  background: linear-gradient(90deg, rgba(127,127,127,0.03), rgba(127,127,127,0.09), rgba(127,127,127,0.03));
+}
+.tx-icon {
+  box-shadow: inset 0 0 0 1px rgba(127,127,127,0.05),
+              0 3px 10px -4px var(--c);
+}
+
+/* --- Filter indicator: lebih glassy --- */
+.filters .indicator {
+  background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+  box-shadow: 0 4px 14px -3px rgba(0,0,0,0.25),
+              inset 0 0 0 1px rgba(255,255,255,0.08);
+}
+[data-theme="light"] .filters .indicator {
+  background: linear-gradient(135deg, #ffffff, rgba(248,250,252,0.9));
+  box-shadow: 0 4px 14px -3px rgba(15,23,42,0.12),
+              inset 0 0 0 1px rgba(15,23,42,0.04);
+}
+
+/* --- Insight box: gradient lembut --- */
+.insight {
+  background: linear-gradient(135deg, rgba(251,191,36,0.06), rgba(167,139,250,0.06));
+  border-color: rgba(167,139,250,0.15);
+}
+
+/* --- Top items progress bar: gradient 3 warna --- */
+.ti-bar > div {
+  background: linear-gradient(90deg, #fbbf24, #f472b6 50%, #a78bfa);
+  box-shadow: 0 0 12px -2px rgba(167,139,250,0.5);
+}
+
+/* --- Chart tooltip lebih premium --- */
+.chart-tooltip {
+  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+/* --- Card head spacing lebih lega --- */
+.card-head { padding: 18px 22px 0; }
+.insight { margin: 0 22px 16px; }
+
+/* --- Scrollbar halus & modern --- */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(148,163,184,0.22);
+  border-radius: 99px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148,163,184,0.4);
+  background-clip: padding-box;
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(15,23,42,0.15); background-clip: padding-box; }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(15,23,42,0.28); background-clip: padding-box; }
+/* ============================================================
+   ABOUT / INFORMASI (Settings)
+   ============================================================ */
+.about-hero {
+  display: flex; align-items: center; gap: 13px;
+  padding: 0 2px 14px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 14px;
+}
+.about-logo {
+  width: 46px; height: 46px; border-radius: 13px; flex: none;
+  background: linear-gradient(135deg, #34d399, #38bdf8 50%, #a78bfa);
+  display: grid; place-items: center;
+  color: #04131a; font-size: 21px; font-weight: 800;
+  box-shadow: 0 10px 26px -10px rgba(52,211,153,0.55),
+              inset 0 1px 0 rgba(255,255,255,0.4);
+}
+.about-hero-text { min-width: 0; }
+.about-name {
+  font-size: 15px; font-weight: 800;
+  letter-spacing: -0.02em;
+  display: flex; align-items: center; gap: 8px;
+  flex-wrap: wrap;
+}
+.about-ver {
+  font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: 6px;
+  background: rgba(52,211,153,0.14);
+  color: var(--emerald);
+  border: 1px solid rgba(52,211,153,0.22);
+  letter-spacing: 0.02em;
+}
+.about-sub {
+  font-size: 11.5px; color: var(--mute);
+  margin-top: 3px; font-weight: 500;
+}
+
+.about-desc {
+  font-size: 12.5px; color: var(--dim);
+  line-height: 1.65;
+  margin: 0 0 14px;
+  padding: 0 2px;
+}
+
+.about-meta {
+  display: flex; flex-direction: column; gap: 0;
+  background: rgba(127,127,127,0.045);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 3px;
+}
+[data-theme="light"] .about-meta {
+  background: rgba(15,23,42,0.03);
+}
+.about-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 10px 12px;
+  font-size: 12.5px;
+}
+.about-row + .about-row { border-top: 1px solid var(--border); }
+.about-key {
+  color: var(--mute); font-weight: 600; flex: none;
+}
+.about-val {
+  color: var(--text); font-weight: 600;
+  text-align: right; font-size: 12.5px;
+  line-height: 1.4;
+}
+
+@media (max-width: 400px) {
+  .about-logo { width: 42px; height: 42px; font-size: 19px; }
+  .about-name { font-size: 14px; }
+  .about-row { padding: 9px 10px; font-size: 12px; }
+  .about-val { font-size: 12px; }
+}
+/* ============================================================
+   MODAL — TENTANG APLIKASI (v2 — lengkap & rapi)
+   ============================================================ */
+.settings-action.info .sa-icon {
+  background: rgba(56,189,248,0.14);
+  color: var(--sky);
+}
+
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 250;
+  display: grid; place-items: center;
+  padding: 20px;
+  background: var(--overlay);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease;
+}
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+.modal {
+  position: relative;
+  width: 100%; max-width: 460px;
+  max-height: min(86vh, 780px);
+  display: flex; flex-direction: column;
+  background: var(--card-solid);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.06);
+  transform: translateY(14px) scale(0.97);
+  opacity: 0;
+  transition: transform .32s cubic-bezier(.2,.7,.3,1), opacity .25s ease;
+  overflow: hidden;
+}
+.modal-overlay.open .modal {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+[data-theme="dark"] .modal {
+  background: linear-gradient(160deg, rgba(30,41,59,0.92), rgba(15,23,42,0.97));
+}
+
+.modal-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 22px 22px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148,163,184,0.3) transparent;
+}
+.modal-scroll::-webkit-scrollbar { width: 6px; }
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148,163,184,0.3);
+  border-radius: 99px;
+}
+.modal-scroll::-webkit-scrollbar-track { background: transparent; }
+
+.modal-close {
+  position: absolute; top: 12px; right: 12px; z-index: 2;
+  width: 32px; height: 32px; border-radius: 9px;
+  border: none; cursor: pointer;
+  background: rgba(127,127,127,0.1);
+  color: var(--dim);
+  display: grid; place-items: center;
+  font-size: 18px; line-height: 1;
+  transition: all .2s;
+}
+.modal-close:hover { background: rgba(251,113,133,0.15); color: var(--rose); transform: rotate(90deg); }
+
+.modal-hero {
+  display: flex; align-items: center; gap: 14px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 18px;
+}
+.modal-hero .about-logo {
+  width: 52px; height: 52px; border-radius: 15px;
+  font-size: 23px;
+}
+
+/* ==== Sections ==== */
+.about-section {
+  margin-bottom: 18px;
+  padding-left: 14px;
+  position: relative;
+}
+.about-section::before {
+  content: '';
+  position: absolute; left: 0; top: 2px; bottom: 2px;
+  width: 3px; border-radius: 99px;
+  background: linear-gradient(180deg, var(--emerald), var(--sky));
+  opacity: 0.7;
+}
+.about-section:last-of-type { margin-bottom: 20px; }
+
+.about-section-title {
+  font-size: 10.5px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--emerald);
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+[data-theme="light"] .about-section-title { color: var(--emerald-deep, #059669); }
+
+.about-desc {
+  font-size: 12.5px; color: var(--dim);
+  line-height: 1.7; margin: 0;
+}
+
+.about-list,
+.about-steps {
+  margin: 0; padding: 0; list-style: none;
+  display: flex; flex-direction: column; gap: 9px;
+}
+.about-list li {
+  position: relative;
+  padding-left: 20px;
+  font-size: 12.5px; color: var(--dim);
+  line-height: 1.55;
+}
+.about-list li::before {
+  content: '';
+  position: absolute; left: 3px; top: 7px;
+  width: 7px; height: 7px; border-radius: 2px;
+  background: linear-gradient(135deg, var(--emerald), var(--sky));
+  box-shadow: 0 0 8px rgba(52,211,153,0.45);
+}
+.about-list b { color: var(--text); font-weight: 700; }
+
+.about-steps { counter-reset: step; }
+.about-steps li {
+  position: relative;
+  padding-left: 32px;
+  font-size: 12.5px; color: var(--dim);
+  line-height: 1.55;
+  counter-increment: step;
+  min-height: 22px;
+}
+.about-steps li::before {
+  content: counter(step);
+  position: absolute; left: 0; top: 0;
+  width: 22px; height: 22px; border-radius: 7px;
+  display: grid; place-items: center;
+  font-size: 10.5px; font-weight: 800;
+  color: #04131a;
+  background: linear-gradient(135deg, #34d399, #38bdf8);
+  box-shadow: 0 4px 12px -3px rgba(52,211,153,0.55),
+              inset 0 1px 0 rgba(255,255,255,0.35);
+}
+.about-steps b { color: var(--text); font-weight: 700; }
+
+/* ==== Meta card di dalam modal ==== */
+.about-meta {
+  display: flex; flex-direction: column;
+  background: rgba(127,127,127,0.05);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 3px;
+  margin-top: 4px;
+}
+[data-theme="light"] .about-meta {
+  background: rgba(15,23,42,0.03);
+}
+.about-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 10px 13px;
+  font-size: 12.5px;
+}
+.about-row + .about-row { border-top: 1px solid var(--border); }
+.about-key { color: var(--mute); font-weight: 600; flex: none; }
+.about-val {
+  color: var(--text); font-weight: 600;
+  text-align: right; line-height: 1.4;
+}
+
+/* ==== Mobile: bottom sheet ==== */
+@media (max-width: 720px) {
+  .modal-overlay { padding: 0; align-items: end; }
+  .modal {
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 20px 20px 0 0;
+    transform: translateY(100%);
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal::before {
+    content: '';
+    position: absolute; top: 9px; left: 50%; transform: translateX(-50%);
+    width: 36px; height: 4px; border-radius: 99px;
+    background: rgba(127,127,127,0.3);
+    z-index: 3;
+  }
+  .modal-scroll {
+    padding: 30px 20px calc(22px + env(safe-area-inset-bottom));
+  }
+  .modal-close { top: 16px; }
+  .modal-hero .about-logo { width: 48px; height: 48px; font-size: 21px; }
+}
+
+/* ==== Mobile kecil ==== */
+@media (max-width: 400px) {
+  .about-row { padding: 9px 11px; font-size: 12px; }
+  .about-val { font-size: 12px; }
+  .about-section { padding-left: 12px; }
+}
 </style>
 </head>
 <body data-page="dashboard">
@@ -978,7 +1566,21 @@
           </button>
           <input type="file" id="uploadInput" accept="application/json,.json" hidden>
         </div>
-
+<!-- ===== Tentang Aplikasi ===== -->
+<div class="card settings-card">
+  <h4>Tentang</h4>
+  <button class="settings-action info" id="aboutBtn">
+    <span class="sa-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="16" x2="12" y2="12"/>
+        <line x1="12" y1="8" x2="12.01" y2="8"/>
+      </svg>
+    </span>
+    <span class="sa-text">Tentang Aplikasi<small>Informasi &amp; pengembang</small></span>
+    <span class="sa-arrow">›</span>
+  </button>
+</div>
         <div class="card settings-card">
           <h4>Zona Bahaya</h4>
           <button class="settings-action danger" id="resetBtn">
@@ -994,7 +1596,94 @@
 </main>
 
 <nav class="bottom-nav" id="bottomNav"></nav>
+<!-- ============ Modal Tentang Aplikasi ============ -->
+<div class="modal-overlay" id="aboutModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+    <button class="modal-close" id="aboutClose" aria-label="Tutup">×</button>
 
+    <div class="modal-scroll">
+
+      <!-- HERO -->
+      <div class="modal-hero">
+        <div class="about-logo">◈</div>
+        <div class="about-hero-text">
+          <div class="about-name" id="aboutTitle">
+            Dompet
+            <span class="about-ver">v2.0.0</span>
+          </div>
+          <div class="about-sub">Keuangan pribadi</div>
+        </div>
+      </div>
+
+      <!-- TENTANG -->
+      <div class="about-section">
+        <h5 class="about-section-title">Tentang</h5>
+        <p class="about-desc">
+          Aplikasi pencatatan keuangan pribadi yang membantu Anda mencatat,
+          mengatur, dan mengontrol pemasukan serta pengeluaran secara lebih
+          terstruktur dan mudah.
+        </p>
+      </div>
+
+      <!-- TUJUAN -->
+      <div class="about-section">
+        <h5 class="about-section-title">Tujuan</h5>
+        <ul class="about-list">
+          <li>Mempermudah pencatatan pemasukan dan pengeluaran sehari-hari</li>
+          <li>Memberi gambaran jelas kondisi keuangan setiap bulan</li>
+          <li>Membantu mengontrol pengeluaran agar lebih terkendali</li>
+          <li>Menyediakan laporan yang mudah diekspor dan dicadangkan</li>
+        </ul>
+      </div>
+
+      <!-- FUNGSI -->
+      <div class="about-section">
+        <h5 class="about-section-title">Fungsi Utama</h5>
+        <ul class="about-list">
+          <li><b>Pencatatan transaksi</b> — pengeluaran &amp; pemasukan</li>
+          <li><b>Kategori pengeluaran</b> — Kebutuhan, Jajan, Sosial</li>
+          <li><b>Sumber pemasukan</b> — Gaji, Tip, Bonus, Lainnya</li>
+          <li><b>Ringkasan &amp; grafik</b> — harian dan komposisi kategori</li>
+          <li><b>Riwayat &amp; filter</b> — telusuri dan kelola transaksi</li>
+          <li><b>Ekspor data</b> — PDF, Excel, dan JSON backup</li>
+          <li><b>Impor / restore</b> — pulihkan dari file cadangan</li>
+          <li><b>Tema tampilan</b> — terang, gelap, sistem, otomatis</li>
+        </ul>
+      </div>
+
+      <!-- CARA PENGGUNAAN -->
+      <div class="about-section">
+        <h5 class="about-section-title">Cara Penggunaan</h5>
+        <ol class="about-steps">
+          <li>Buka menu <b>Tambah</b>, pilih jenis <b>Pengeluaran</b> atau <b>Pemasukan</b>.</li>
+          <li>Pilih kategori (atau sumber pemasukan) yang sesuai.</li>
+          <li>Isi keterangan, nominal, dan tanggal, lalu tekan <b>Simpan Transaksi</b>.</li>
+          <li>Atur <b>Saldo awal</b> di Dashboard jika ingin menghitung saldo akhir.</li>
+          <li>Pantau ringkasan, grafik harian, dan komposisi di <b>Dashboard</b>.</li>
+          <li>Gunakan <b>Riwayat</b> untuk melihat, memfilter, atau menghapus transaksi.</li>
+          <li>Di <b>Pengaturan</b>, atur tema, ekspor laporan, atau cadangkan data.</li>
+        </ol>
+      </div>
+
+      <!-- META -->
+      <div class="about-meta">
+        <div class="about-row">
+          <span class="about-key">Pengembang</span>
+          <span class="about-val">Askolani</span>
+        </div>
+        <div class="about-row">
+          <span class="about-key">Tujuan</span>
+          <span class="about-val">Mempermudah pengaturan &amp; kontrol keuangan</span>
+        </div>
+        <div class="about-row">
+          <span class="about-key">Tahun</span>
+          <span class="about-val" id="aboutYear">—</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"><span class="tdot"></span><span id="toastMsg"></span></div>
 
 <script>
@@ -2116,6 +2805,35 @@ function initDateInput() {
 
 window.addEventListener('error', e => console.error('Global error:', e.error));
 window.addEventListener('unhandledrejection', e => console.error('Unhandled rejection:', e.reason));
+
+// ===== Modal Tentang Aplikasi =====
+(function initAboutModal() {
+  const overlay = document.getElementById('aboutModal');
+  const btn = document.getElementById('aboutBtn');
+  const closeBtn = document.getElementById('aboutClose');
+  const yearEl = document.getElementById('aboutYear');
+  if (!overlay || !btn) return;
+
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  function openModal() {
+    overlay.hidden = false;
+    requestAnimationFrame(() => overlay.classList.add('open'));
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(() => { overlay.hidden = true; }, 260);
+  }
+
+  btn.addEventListener('click', openModal);
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && overlay.classList.contains('open')) closeModal();
+  });
+})();
 
 buildNavs();
 initTheme();
