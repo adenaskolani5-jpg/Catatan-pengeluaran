@@ -1301,6 +1301,61 @@
   .about-val { font-size: 12px; }
   .about-section { padding-left: 12px; }
 }
+/* ============================================================
+   RANGE SELECTOR (Dashboard)
+   ============================================================ */
+.range-bar {
+  display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: space-between; gap: 10px;
+  margin-bottom: 14px;
+  animation: fadeUp .6s .04s cubic-bezier(.2,.7,.3,1) both;
+}
+.range-tabs {
+  display: flex; gap: 2px; padding: 4px;
+  background: rgba(127,127,127,.06); border: 1px solid var(--border);
+  border-radius: 11px; overflow-x: auto; scrollbar-width: none;
+  flex-wrap: nowrap;
+}
+.range-tabs::-webkit-scrollbar { display: none; }
+.range-tab {
+  padding: 7px 13px; border-radius: 8px; border: none;
+  background: transparent; color: var(--dim);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  white-space: nowrap; transition: all .2s;
+}
+.range-tab:hover { color: var(--text); }
+.range-tab.active {
+  background: var(--card-solid); color: var(--text);
+  box-shadow: 0 2px 8px -2px rgba(0,0,0,.15);
+}
+[data-theme="dark"] .range-tab.active { background: rgba(255,255,255,.1); }
+.range-detail {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--dim); flex-wrap: wrap;
+}
+.range-input {
+  padding: 7px 10px !important;
+  font-size: 12px !important;
+  width: auto !important;
+  min-width: 135px;
+  height: auto !important;
+}
+.range-input[type="number"] { min-width: 80px; width: 90px !important; }
+.range-sep { color: var(--mute); font-weight: 700; }
+.range-all-info {
+  padding: 7px 12px;
+  background: rgba(127,127,127,.06);
+  border: 1px dashed var(--border-2);
+  border-radius: 9px; font-size: 12px; color: var(--dim);
+}
+.range-all-info b { color: var(--text); }
+@media (max-width: 720px) {
+  .range-bar { flex-direction: column; align-items: stretch; gap: 8px; }
+  .range-tabs { width: 100%; justify-content: space-between; }
+  .range-tab { flex: 1; padding: 8px 4px; font-size: 11.5px; }
+  .range-detail { justify-content: center; width: 100%; }
+  .range-input { flex: 1; min-width: 0 !important; }
+}
 </style>
 </head>
 <body data-page="dashboard">
@@ -1336,7 +1391,7 @@
         <div class="page-title-row">
           <div>
             <h1 class="page-title">Dashboard</h1>
-            <p class="page-sub">Ringkasan keuangan bulan ini</p>
+            <p class="page-sub" id="rangeLabel">Ringkasan keuangan bulan ini</p>
           </div>
           <div class="opening-wrap">
             <label for="openingBalance">Saldo awal</label>
@@ -1344,7 +1399,27 @@
             <input id="openingBalance" inputmode="numeric" placeholder="0" value="">
           </div>
         </div>
-
+<div class="range-bar">
+  <div class="range-tabs" id="rangeTabs">
+    <button type="button" class="range-tab active" data-range="month">Bulan ini</button>
+    <button type="button" class="range-tab" data-range="range">Rentang</button>
+    <button type="button" class="range-tab" data-range="year">Tahun</button>
+    <button type="button" class="range-tab" data-range="all">Semua</button>
+  </div>
+  <div class="range-detail" id="rangeDetail" hidden>
+    <div id="rangeMonthControls" hidden style="display:flex;align-items:center;gap:8px">
+      <input type="month" id="rangeFromInput" class="input range-input">
+      <span class="range-sep">→</span>
+      <input type="month" id="rangeToInput" class="input range-input">
+    </div>
+    <div id="rangeYearControls" hidden>
+      <input type="number" id="rangeYearInput" class="input range-input" min="2000" max="2100" step="1">
+    </div>
+    <div id="rangeAllInfo" class="range-all-info" hidden>
+      <span id="rangeAllText">—</span>
+    </div>
+  </div>
+</div>
         <section class="stats">
           <div class="stat income">
             <div class="stat-label"><span class="dot"></span>Pemasukan</div>
@@ -1357,7 +1432,7 @@
             <div class="stat-sub" id="expenseSub">Belum ada pengeluaran</div>
           </div>
           <div class="stat balance">
-            <div class="stat-label"><span class="dot"></span>Sisa bulan ini</div>
+            <div class="stat-label"><span class="dot"></span><span id="balanceStatLabel">Sisa bulan ini</span></div>
             <div class="stat-value zero" id="balanceVal">Rp 0</div>
             <div class="status-badge neutral" id="statusBadge">Belum ada transaksi</div>
             <div class="stat-sub" id="balanceSub" style="display:none"></div>
@@ -1775,6 +1850,11 @@ let formType = 'expense';
 let formCat = 'Kebutuhan';
 let formSrc = 'Gaji';
 let currentFilter = 'all';
+// Range mode untuk statistik Dashboard
+let rangeMode = 'month';   // 'month' | 'range' | 'year' | 'all'
+let rangeFromKey = null;   // 'YYYY-MM'
+let rangeToKey = null;
+let rangeYearVal = null;
 
 /* =========================================================
    DATA VALIDATION & STORAGE
@@ -1852,6 +1932,51 @@ function monthTransactions() {
   const key = monthKeyOf(viewDate);
   return state.transactions.filter(t => t && typeof t.date === 'string' && t.date.startsWith(key));
 }
+/* --- Range helper --- */
+function getAllMonthsBetween(fromKey, toKey) {
+  const months = [];
+  let [fy, fm] = fromKey.split('-').map(Number);
+  const [ty, tm] = toKey.split('-').map(Number);
+  while (fy < ty || (fy === ty && fm <= tm)) {
+    months.push(`${fy}-${pad(fm)}`);
+    fm++;
+    if (fm > 12) { fm = 1; fy++; }
+  }
+  return months;
+}
+
+function getRangeMonths() {
+  if (rangeMode === 'month') return [monthKeyOf(viewDate)];
+  if (rangeMode === 'range') {
+    const f = rangeFromKey || monthKeyOf(viewDate);
+    const t = rangeToKey || monthKeyOf(viewDate);
+    return getAllMonthsBetween(f < t ? f : t, f < t ? t : f);
+  }
+  if (rangeMode === 'year') {
+    const y = rangeYearVal || viewDate.getFullYear();
+    return Array.from({ length: 12 }, (_, i) => `${y}-${pad(i + 1)}`);
+  }
+  if (rangeMode === 'all') {
+    const set = new Set(state.transactions.map(t => t.date.slice(0, 7)));
+    Object.keys(state.opening || {}).forEach(m => {
+      if (/^\d{4}-\d{2}$/.test(m)) set.add(m);
+    });
+    return Array.from(set).sort();
+  }
+  return [monthKeyOf(viewDate)];
+}
+
+function getRangeTxs() {
+  if (rangeMode === 'all') return state.transactions.slice();
+  const months = new Set(getRangeMonths());
+  return state.transactions.filter(t => t && months.has(t.date.slice(0, 7)));
+}
+
+function getRangeOpening() {
+  let sum = 0;
+  getRangeMonths().forEach(m => { sum += state.opening[m] || 0; });
+  return sum;
+}
 function getFilteredTxs() {
   const txs = monthTransactions();
   if (currentFilter === 'all') return txs;
@@ -1927,11 +2052,11 @@ function renderOpeningInput() {
 }
 
 function renderStats() {
-  const txs = monthTransactions();
+  const txs = getRangeTxs();
   const income = txs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const expense = txs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
   const balance = income - expense;
-  const opening = state.opening[monthKeyOf(viewDate)] || 0;
+  const opening = getRangeOpening();
 
   animateValue(document.getElementById('incomeVal'), income, fmtRp);
   animateValue(document.getElementById('expenseVal'), expense, fmtRp);
@@ -2004,28 +2129,52 @@ function runChartAnimation() {
 }
 
 function renderCharts() {
-  const txs = monthTransactions().filter(t => t.type === 'expense');
-  const y = viewDate.getFullYear(), m = viewDate.getMonth();
-  const days = new Date(y, m + 1, 0).getDate();
-
-  const perDay = Array.from({ length: days }, () => ({ Kebutuhan: 0, Jajan: 0, Sosial: 0 }));
+  const txs = getRangeTxs().filter(t => t.type === 'expense');
   const catTotals = { Kebutuhan: 0, Jajan: 0, Sosial: 0 };
   const items = {};
 
-  txs.forEach(t => {
-    if (!isFinite(t.amount) || t.amount <= 0) return;
-    const d = Number(t.date.slice(8, 10));
-    if (perDay[d - 1] && perDay[d - 1][t.category] !== undefined) {
-      perDay[d - 1][t.category] += t.amount;
-      catTotals[t.category] += t.amount;
-    }
-    const k = (t.note || '').trim().toLowerCase() || t.category.toLowerCase();
-    items[k] = (items[k] || 0) + t.amount;
-  });
+  if (rangeMode === 'month') {
+    // ===== Daily view untuk mode bulan ini =====
+    const y = viewDate.getFullYear(), m = viewDate.getMonth();
+    const days = new Date(y, m + 1, 0).getDate();
+    const perDay = Array.from({ length: days }, () => ({ Kebutuhan: 0, Jajan: 0, Sosial: 0 }));
 
-  let max = 0;
-  perDay.forEach(d => { const s = d.Kebutuhan + d.Jajan + d.Sosial; if (s > max) max = s; });
-  barData = { rects: [], perDay, days, max };
+    txs.forEach(t => {
+      if (!isFinite(t.amount) || t.amount <= 0) return;
+      const d = Number(t.date.slice(8, 10));
+      if (perDay[d - 1] && perDay[d - 1][t.category] !== undefined) {
+        perDay[d - 1][t.category] += t.amount;
+        catTotals[t.category] += t.amount;
+      }
+      const k = (t.note || '').trim().toLowerCase() || t.category.toLowerCase();
+      items[k] = (items[k] || 0) + t.amount;
+    });
+
+    let max = 0;
+    perDay.forEach(d => { const s = d.Kebutuhan + d.Jajan + d.Sosial; if (s > max) max = s; });
+    barData = { mode: 'daily', rects: [], perDay, days, max };
+  } else {
+    // ===== Monthly view untuk mode rentang / tahun / semua =====
+    const months = getRangeMonths();
+    const perMonth = months.map(mk => ({ Kebutuhan: 0, Jajan: 0, Sosial: 0, key: mk }));
+    const monthIdx = new Map(months.map((mk, i) => [mk, i]));
+
+    txs.forEach(t => {
+      if (!isFinite(t.amount) || t.amount <= 0) return;
+      const mk = t.date.slice(0, 7);
+      const idx = monthIdx.get(mk);
+      if (idx !== undefined && perMonth[idx][t.category] !== undefined) {
+        perMonth[idx][t.category] += t.amount;
+        catTotals[t.category] += t.amount;
+      }
+      const k = (t.note || '').trim().toLowerCase() || t.category.toLowerCase();
+      items[k] = (items[k] || 0) + t.amount;
+    });
+
+    let max = 0;
+    perMonth.forEach(d => { const s = d.Kebutuhan + d.Jajan + d.Sosial; if (s > max) max = s; });
+    barData = { mode: 'monthly', rects: [], perMonth, months, max };
+  }
 
   donutData = {
     total: catTotals.Kebutuhan + catTotals.Jajan + catTotals.Sosial,
@@ -2050,11 +2199,11 @@ function drawBarChart() {
   const pad = { top: 14, right: 8, bottom: 26, left: padLeft };
   const plotW = w - pad.left - pad.right;
   const plotH = h - pad.top - pad.bottom;
-  const days = barData.days;
   const max = barData.max;
 
   ctx.clearRect(0, 0, w, h);
 
+  // Y-axis grid
   const steps = 4;
   ctx.font = (isNarrow ? '9px' : '10px') + ' Inter, sans-serif';
   ctx.textAlign = 'right';
@@ -2078,45 +2227,94 @@ function drawBarChart() {
     ctx.fillText('Belum ada data pengeluaran', w / 2, pad.top + plotH / 2);
   }
 
-  const slot = plotW / days;
-  const barW = Math.max(2.5, Math.min(22, slot * 0.62));
   barData.rects = [];
 
-  for (let i = 0; i < days; i++) {
-    const d = barData.perDay[i];
-    const total = d.Kebutuhan + d.Jajan + d.Sosial;
-    const x = pad.left + slot * i + (slot - barW) / 2;
+  if (barData.mode === 'daily') {
+    const days = barData.days;
+    const slot = plotW / days;
+    const barW = Math.max(2.5, Math.min(22, slot * 0.62));
 
-    if (total > 0 && chartProgress > 0 && max > 0) {
-      let base = pad.top + plotH;
-      const segs = VALID_CATS.filter(c => d[c] > 0);
-      segs.forEach((cat, idx) => {
-        const v = d[cat];
-        const bh = Math.max(1.5, (v / max) * plotH * chartProgress);
-        const yTop = base - bh;
-        ctx.fillStyle = CAT_COLORS[cat];
-        if (idx === segs.length - 1) {
-          roundRectTop(ctx, x, yTop, barW, bh, 3);
-          ctx.fill();
-        } else {
-          ctx.fillRect(x, yTop, barW, bh);
-        }
-        base = yTop;
-      });
-    } else {
-      ctx.fillStyle = 'rgba(127,127,127,0.15)';
-      ctx.fillRect(x, pad.top + plotH - 2, barW, 2);
+    for (let i = 0; i < days; i++) {
+      const d = barData.perDay[i];
+      const total = d.Kebutuhan + d.Jajan + d.Sosial;
+      const x = pad.left + slot * i + (slot - barW) / 2;
+
+      if (total > 0 && chartProgress > 0 && max > 0) {
+        let base = pad.top + plotH;
+        const segs = VALID_CATS.filter(c => d[c] > 0);
+        segs.forEach((cat, idx) => {
+          const v = d[cat];
+          const bh = Math.max(1.5, (v / max) * plotH * chartProgress);
+          const yTop = base - bh;
+          ctx.fillStyle = CAT_COLORS[cat];
+          if (idx === segs.length - 1) {
+            roundRectTop(ctx, x, yTop, barW, bh, 3);
+            ctx.fill();
+          } else {
+            ctx.fillRect(x, yTop, barW, bh);
+          }
+          base = yTop;
+        });
+      } else {
+        ctx.fillStyle = 'rgba(127,127,127,0.15)';
+        ctx.fillRect(x, pad.top + plotH - 2, barW, 2);
+      }
+
+      barData.rects.push({ x, y: pad.top, w: barW, h: plotH, day: i + 1, data: d, total });
+
+      const isBold = (i + 1) === 1 || (i + 1) === days;
+      const shouldShow = isBold || (isNarrow ? (i + 1) % 10 === 0 : (i + 1) % 5 === 0);
+      if (shouldShow) {
+        ctx.fillStyle = 'rgba(127,127,127,0.7)';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText(String(i + 1), x + barW / 2, pad.top + plotH + 8);
+      }
     }
+  } else {
+    // ===== Monthly mode =====
+    const months = barData.months;
+    const n = Math.max(1, months.length);
+    const slot = plotW / n;
+    const barW = Math.max(6, Math.min(30, slot * 0.55));
+    const labelSkip = n <= 12 ? 1 : Math.ceil(n / 12);
 
-    barData.rects.push({ x, y: pad.top, w: barW, h: plotH, day: i + 1, data: d, total });
+    for (let i = 0; i < n; i++) {
+      const d = barData.perMonth[i];
+      const total = d.Kebutuhan + d.Jajan + d.Sosial;
+      const x = pad.left + slot * i + (slot - barW) / 2;
 
-    const isBold = (i + 1) === 1 || (i + 1) === days;
-    const shouldShow = isBold || (isNarrow ? (i + 1) % 10 === 0 : (i + 1) % 5 === 0);
-    if (shouldShow) {
-      ctx.fillStyle = 'rgba(127,127,127,0.7)';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'top';
-      ctx.fillText(String(i + 1), x + barW / 2, pad.top + plotH + 8);
+      if (total > 0 && chartProgress > 0 && max > 0) {
+        let base = pad.top + plotH;
+        const segs = VALID_CATS.filter(c => d[c] > 0);
+        segs.forEach((cat, idx) => {
+          const v = d[cat];
+          const bh = Math.max(1.5, (v / max) * plotH * chartProgress);
+          const yTop = base - bh;
+          ctx.fillStyle = CAT_COLORS[cat];
+          if (idx === segs.length - 1) {
+            roundRectTop(ctx, x, yTop, barW, bh, 3);
+            ctx.fill();
+          } else {
+            ctx.fillRect(x, yTop, barW, bh);
+          }
+          base = yTop;
+        });
+      } else {
+        ctx.fillStyle = 'rgba(127,127,127,0.15)';
+        ctx.fillRect(x, pad.top + plotH - 2, barW, 2);
+      }
+
+      barData.rects.push({ x, y: pad.top, w: barW, h: plotH, monthKey: months[i], data: d, total });
+
+      const [, mm] = months[i].split('-').map(Number);
+      const shouldShow = i === 0 || i === n - 1 || (i % labelSkip === 0);
+      if (shouldShow) {
+        ctx.fillStyle = 'rgba(127,127,127,0.7)';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText(MONTHS_SHORT[mm - 1], x + barW / 2, pad.top + plotH + 8);
+      }
     }
   }
 }
@@ -2197,25 +2395,53 @@ function renderTopItems(items) {
 function renderInsight() {
   const el = document.getElementById('insight');
   if (!el) return;
-  const txs = monthTransactions().filter(t => t.type === 'expense' && isFinite(t.amount));
-  if (!txs.length) { el.textContent = 'Belum ada pengeluaran bulan ini.'; return; }
-  const byDay = {};
-  txs.forEach(t => {
-    const d = Number(t.date.slice(8, 10));
-    if (!byDay[d]) byDay[d] = [];
-    byDay[d].push(t);
-  });
-  let best = null;
-  Object.entries(byDay).forEach(([d, list]) => {
-    const total = list.reduce((s, t) => s + t.amount, 0);
-    if (!best || total > best.total) best = { day: Number(d), total, list };
-  });
-  const catTotals = {};
-  best.list.forEach(t => { catTotals[t.category] = (catTotals[t.category] || 0) + t.amount; });
-  const mainCat = Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0]?.[0] || '';
-  const notes = [...new Set(best.list.map(t => t.note).filter(Boolean))].slice(0, 3);
-  const reason = notes.length ? ` (${notes.join(', ')})` : '';
-  el.innerHTML = `Hari terbesar: <b>${best.day} ${MONTHS_SHORT[viewDate.getMonth()]}</b> — <b>${fmtRp(best.total)}</b>, mayoritas <span class="hl">${escapeHtml(mainCat)}</span>${escapeHtml(reason)}.`;
+  const txs = getRangeTxs().filter(t => t.type === 'expense' && isFinite(t.amount));
+  if (!txs.length) {
+    el.textContent = rangeMode === 'month'
+      ? 'Belum ada pengeluaran bulan ini.'
+      : 'Belum ada pengeluaran pada periode ini.';
+    return;
+  }
+
+  if (barData.mode === 'daily') {
+    const byDay = {};
+    txs.forEach(t => {
+      const d = Number(t.date.slice(8, 10));
+      if (!byDay[d]) byDay[d] = [];
+      byDay[d].push(t);
+    });
+    let best = null;
+    Object.entries(byDay).forEach(([d, list]) => {
+      const total = list.reduce((s, t) => s + t.amount, 0);
+      if (!best || total > best.total) best = { day: Number(d), total, list };
+    });
+    const catTotals = {};
+    best.list.forEach(t => { catTotals[t.category] = (catTotals[t.category] || 0) + t.amount; });
+    const mainCat = Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+    const notes = [...new Set(best.list.map(t => t.note).filter(Boolean))].slice(0, 3);
+    const reason = notes.length ? ` (${notes.join(', ')})` : '';
+    el.innerHTML = `Hari terbesar: <b>${best.day} ${MONTHS_SHORT[viewDate.getMonth()]}</b> — <b>${fmtRp(best.total)}</b>, mayoritas <span class="hl">${escapeHtml(mainCat)}</span>${escapeHtml(reason)}.`;
+  } else {
+    // Mode bulanan
+    const byMonth = {};
+    txs.forEach(t => {
+      const mk = t.date.slice(0, 7);
+      if (!byMonth[mk]) byMonth[mk] = [];
+      byMonth[mk].push(t);
+    });
+    let best = null;
+    Object.entries(byMonth).forEach(([mk, list]) => {
+      const total = list.reduce((s, t) => s + t.amount, 0);
+      if (!best || total > best.total) best = { key: mk, total, list };
+    });
+    const catTotals = {};
+    best.list.forEach(t => { catTotals[t.category] = (catTotals[t.category] || 0) + t.amount; });
+    const mainCat = Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+    const notes = [...new Set(best.list.map(t => t.note).filter(Boolean))].slice(0, 3);
+    const reason = notes.length ? ` (${notes.join(', ')})` : '';
+    const [yy, mm] = best.key.split('-').map(Number);
+    el.innerHTML = `Bulan terbesar: <b>${MONTHS[mm - 1]} ${yy}</b> — <b>${fmtRp(best.total)}</b>, mayoritas <span class="hl">${escapeHtml(mainCat)}</span>${escapeHtml(reason)}.`;
+  }
 }
 
 /* ---------- List ---------- */
@@ -2754,9 +2980,15 @@ function toast(msg, isErr) {
     const hit = barData.rects.find(r => mx >= r.x - 3 && mx <= r.x + r.w + 3 && r.total > 0);
     if (!hit) { tip.classList.remove('show'); return; }
 
-    const dateObj = new Date(viewDate.getFullYear(), viewDate.getMonth(), hit.day);
-    const label = dateObj.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
-    let rows = '';
+let label;
+if (barData.mode === 'daily') {
+  const dateObj = new Date(viewDate.getFullYear(), viewDate.getMonth(), hit.day);
+  label = dateObj.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
+} else {
+  const [yy, mm] = hit.monthKey.split('-').map(Number);
+  label = `${MONTHS[mm - 1]} ${yy}`;
+}
+let rows = '';
     VALID_CATS.forEach(c => {
       if (hit.data[c] > 0) {
         rows += `<div class="tt-row"><span><span class="tt-dot" style="background:${CAT_COLORS[c]}"></span>${c}</span><b>${fmtRp(hit.data[c])}</b></div>`;
@@ -2791,6 +3023,150 @@ function toast(msg, isErr) {
   }, { passive: true });
   canvas.addEventListener('touchcancel', () => tip.classList.remove('show'), { passive: true });
 })();
+
+/* =========================================================
+   RANGE SELECTOR (Dashboard)
+   ========================================================= */
+const RANGE_LABELS = {
+  month: () => {
+    const m = MONTHS[viewDate.getMonth()], y = viewDate.getFullYear();
+    return `Ringkasan keuangan ${m} ${y}`;
+  },
+  range: () => {
+    const f = (rangeFromKey || monthKeyOf(viewDate)).split('-').map(Number);
+    const t = (rangeToKey || monthKeyOf(viewDate)).split('-').map(Number);
+    const fmt = (y, m) => `${MONTHS_SHORT[m - 1]} ${y}`;
+    return `Ringkasan ${fmt(f[0], f[1])} – ${fmt(t[0], t[1])}`;
+  },
+  year: () => `Ringkasan tahun ${rangeYearVal || viewDate.getFullYear()}`,
+  all: () => 'Ringkasan semua waktu'
+};
+
+function updateBalanceStatLabel() {
+  const el = document.getElementById('balanceStatLabel');
+  if (!el) return;
+  el.textContent = {
+    month: 'Sisa bulan ini',
+    range: 'Sisa rentang',
+    year: 'Sisa tahun',
+    all: 'Sisa total'
+  }[rangeMode] || 'Sisa';
+}
+
+function updateRangeLabel() {
+  const el = document.getElementById('rangeLabel');
+  if (!el) return;
+  const fn = RANGE_LABELS[rangeMode];
+  if (fn) el.textContent = fn();
+}
+
+function setRangeMode(mode) {
+  if (!['month','range','year','all'].includes(mode)) mode = 'month';
+  rangeMode = mode;
+
+  document.querySelectorAll('.range-tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.range === mode));
+
+  const detail = document.getElementById('rangeDetail');
+  const monthCtl = document.getElementById('rangeMonthControls');
+  const yearCtl  = document.getElementById('rangeYearControls');
+  const allCtl   = document.getElementById('rangeAllInfo');
+
+  if (mode === 'month') {
+    detail.hidden = true;
+  } else {
+    detail.hidden = false;
+    monthCtl.hidden = mode !== 'range';
+    yearCtl.hidden  = mode !== 'year';
+    allCtl.hidden   = mode !== 'all';
+
+    if (mode === 'range') {
+      if (!rangeFromKey) rangeFromKey = monthKeyOf(viewDate);
+      if (!rangeToKey)   rangeToKey   = monthKeyOf(viewDate);
+      const fi = document.getElementById('rangeFromInput');
+      const ti = document.getElementById('rangeToInput');
+      if (fi) fi.value = rangeFromKey;
+      if (ti) ti.value = rangeToKey;
+    } else if (mode === 'year') {
+      if (!rangeYearVal) rangeYearVal = viewDate.getFullYear();
+      const yi = document.getElementById('rangeYearInput');
+      if (yi) yi.value = rangeYearVal;
+    } else if (mode === 'all') {
+      const months = getRangeMonths();
+      const el = document.getElementById('rangeAllText');
+      if (el) {
+        if (months.length) {
+          const first = months[0], last = months[months.length - 1];
+          const [fy, fm] = first.split('-').map(Number);
+          const [ly, lm] = last.split('-').map(Number);
+          el.innerHTML = `<b>${months.length} bulan</b> — ${MONTHS_SHORT[fm-1]} ${fy} s/d ${MONTHS_SHORT[lm-1]} ${ly}`;
+        } else {
+          el.textContent = 'Belum ada data';
+        }
+      }
+    }
+  }
+
+  // Sembunyikan opening input kalau bukan mode 'month'
+  const openingWrap = document.querySelector('.opening-wrap');
+  if (openingWrap) openingWrap.style.display = (mode === 'month') ? '' : 'none';
+
+  updateBalanceStatLabel();
+  updateRangeLabel();
+  renderStats();
+  renderCharts();
+}
+
+function initRangeUI() {
+  rangeFromKey = monthKeyOf(viewDate);
+  rangeToKey   = monthKeyOf(viewDate);
+  rangeYearVal = viewDate.getFullYear();
+
+  const tabs = document.getElementById('rangeTabs');
+  if (tabs) {
+    tabs.addEventListener('click', e => {
+      const tab = e.target.closest('.range-tab');
+      if (tab) setRangeMode(tab.dataset.range);
+    });
+  }
+
+  const fi = document.getElementById('rangeFromInput');
+  if (fi) fi.addEventListener('change', e => {
+    rangeFromKey = e.target.value || monthKeyOf(viewDate);
+    if (rangeToKey < rangeFromKey) {
+      rangeToKey = rangeFromKey;
+      const ti = document.getElementById('rangeToInput');
+      if (ti) ti.value = rangeToKey;
+    }
+    renderStats(); renderCharts(); updateRangeLabel();
+    setRangeMode('range'); // refresh info
+  });
+
+  const ti = document.getElementById('rangeToInput');
+  if (ti) ti.addEventListener('change', e => {
+    rangeToKey = e.target.value || monthKeyOf(viewDate);
+    if (rangeFromKey > rangeToKey) {
+      rangeFromKey = rangeToKey;
+      const fi2 = document.getElementById('rangeFromInput');
+      if (fi2) fi2.value = rangeFromKey;
+    }
+    renderStats(); renderCharts(); updateRangeLabel();
+    setRangeMode('range');
+  });
+
+  const yi = document.getElementById('rangeYearInput');
+  if (yi) yi.addEventListener('change', e => {
+    const v = parseInt(e.target.value, 10);
+    if (v >= 2000 && v <= 2100) {
+      rangeYearVal = v;
+      renderStats(); renderCharts(); updateRangeLabel();
+      setRangeMode('year');
+    }
+  });
+
+  updateBalanceStatLabel();
+  updateRangeLabel();
+}
 
 /* =========================================================
    INIT
@@ -2839,6 +3215,7 @@ buildNavs();
 initTheme();
 setFormType('expense');
 initDateInput();
+initRangeUI();
 
 requestAnimationFrame(() => {
   try {
