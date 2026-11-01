@@ -1356,6 +1356,155 @@
   .range-detail { justify-content: center; width: 100%; }
   .range-input { flex: 1; min-width: 0 !important; }
 }
+.month-nav {
+  display: flex; align-items: center; gap: 4px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 13px; padding: 5px; backdrop-filter: blur(20px);
+}
+.month-nav button {
+  width: 32px; height: 32px; border-radius: 9px; border: none;
+  background: transparent; color: var(--dim); cursor: pointer;
+  display: grid; place-items: center; transition: all .2s;
+  font-size: 17px; line-height: 1; flex: none;
+}
+.month-nav button:hover { background: rgba(127,127,127,.1); color: var(--text); transform: scale(1.06); }
+.month-nav button:active { transform: scale(.94); }
+.month-nav button.today { width: auto; padding: 0 10px; font-size: 11.5px; font-weight: 600; }
+.month-label {
+  min-width: 128px; text-align: center; font-weight: 600; font-size: 13.5px;
+  white-space: nowrap;
+}
+@media (max-width: 720px) {
+  .month-label { min-width: 108px; font-size: 12.5px; }
+  .month-nav button.today { padding: 0 8px; font-size: 11px; }
+}
+@media (max-width: 400px) {
+  .month-nav button.today { display: none; }
+  .month-label { min-width: 90px; font-size: 12px; }
+}
+/* ============================================================
+   HISTORY — month nav sebagai control bar sendiri
+   ============================================================ */
+.history-nav-bar {
+  display: flex;
+  margin: -4px 0 14px;
+  animation: fadeUp .5s .05s cubic-bezier(.2,.7,.3,1) both;
+}
+.history-nav-bar .month-nav {
+  flex: 1;
+  justify-content: space-between;
+  padding: 6px;
+  gap: 6px;
+}
+.history-nav-bar .month-nav button {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  font-size: 20px;
+}
+.history-nav-bar .month-nav .month-label {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  padding: 0 8px;
+}
+.history-nav-bar .month-nav button.today {
+  height: 34px;
+  padding: 0 14px;
+  font-size: 12px;
+  border-radius: 9px;
+}
+.history-nav-bar .month-nav button.today:hover {
+  background: rgba(52,211,153,.12);
+  color: var(--emerald);
+}
+
+@media (max-width: 720px) {
+  .history-nav-bar .month-nav .month-label { font-size: 13.5px; }
+  .history-nav-bar .month-nav button.today { padding: 0 11px; font-size: 11.5px; }
+}
+@media (max-width: 480px) {
+  .history-nav-bar .month-nav button {
+    width: 34px; height: 34px; font-size: 18px;
+  }
+  .history-nav-bar .month-nav button.today {
+    padding: 0 9px; height: 32px; font-size: 10.5px;
+  }
+  .history-nav-bar .month-nav .month-label {
+    font-size: 12.5px; padding: 0 4px;
+  }
+}
+/* ============================================================
+   HISTORY — compact month nav (minimalis, simpel, profesional)
+   ============================================================ */
+
+/* Hilangkan wrapper lama kalau masih ada (jaga-jaga) */
+.history-nav-bar { display: none !important; }
+
+/* Alignment khusus halaman Riwayat: month-nav sejajar tengah dengan judul */
+.page[data-page="history"] .page-title-row {
+  align-items: center;
+}
+
+/* Ukuran compact */
+#historyMonthNav {
+  padding: 3px;
+  gap: 1px;
+  border-radius: 10px;
+  background: var(--card-elev);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.05);
+  flex: 0 0 auto;
+  align-self: center;
+}
+#historyMonthNav button {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+#historyMonthNav .month-label {
+  min-width: 108px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  padding: 0 4px;
+  text-align: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+#historyMonthNav button.today {
+  width: auto;
+  height: 26px;
+  padding: 0 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+  border-radius: 6px;
+  letter-spacing: -0.005em;
+}
+#historyMonthNav button.today:hover {
+  background: rgba(52,211,153,.10);
+  color: var(--emerald);
+}
+
+/* Responsive — tetap pas di semua ukuran */
+@media (max-width: 720px) {
+  #historyMonthNav .month-label { min-width: 100px; font-size: 11px; }
+  #historyMonthNav button.today { padding: 0 7px; font-size: 10px; }
+}
+@media (max-width: 480px) {
+  #historyMonthNav { padding: 2px; }
+  #historyMonthNav button { width: 24px; height: 24px; font-size: 13px; border-radius: 5px; }
+  #historyMonthNav .month-label { min-width: 88px; font-size: 10.5px; padding: 0 2px; }
+  #historyMonthNav button.today { height: 24px; padding: 0 6px; font-size: 9.5px; }
+}
 </style>
 </head>
 <body data-page="dashboard">
@@ -1382,17 +1531,17 @@
     <!-- ============ DASHBOARD ============ -->
     <section class="page active" data-page="dashboard">
       <div class="page-inner">
-        <div class="page-title-row">
-          <div>
-            <h1 class="page-title">Dashboard</h1>
-            <p class="page-sub" id="rangeLabel">Ringkasan keuangan bulan ini</p>
-          </div>
-          <div class="opening-wrap">
-            <label for="openingBalance">Saldo awal</label>
-            <span class="rp">Rp</span>
-            <input id="openingBalance" inputmode="numeric" placeholder="0" value="">
-          </div>
-        </div>
+<div class="page-title-row">
+  <div>
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-sub" id="rangeLabel">Ringkasan keuangan bulan ini</p>
+  </div>
+  <div class="opening-wrap">
+    <label for="openingBalance">Saldo awal</label>
+    <span class="rp">Rp</span>
+    <input id="openingBalance" inputmode="numeric" placeholder="0" value="">
+  </div>
+</div>
 <div class="range-bar">
   <div class="range-tabs" id="rangeTabs">
     <button type="button" class="range-tab active" data-range="month">Bulan ini</button>
@@ -1461,12 +1610,12 @@
     <!-- ============ TAMBAH ============ -->
     <section class="page" data-page="add">
       <div class="page-inner narrow">
-        <div class="page-title-row">
-          <div>
-            <h1 class="page-title">Tambah Transaksi</h1>
-            <p class="page-sub">Catat pengeluaran atau pemasukan baru</p>
-          </div>
-        </div>
+<div class="page-title-row">
+  <div>
+    <h1 class="page-title">Tambah Transaksi</h1>
+    <p class="page-sub">Catat pengeluaran atau pemasukan baru</p>
+  </div>
+</div>
 
         <form class="card form-card" id="txForm">
           <div class="segmented" id="typeSwitch">
@@ -1549,12 +1698,18 @@
     <!-- ============ RIWAYAT ============ -->
     <section class="page" data-page="history">
       <div class="page-inner medium">
-        <div class="page-title-row">
-          <div>
-            <h1 class="page-title">Riwayat</h1>
-            <p class="page-sub" id="listCount"></p>
-          </div>
-        </div>
+<div class="page-title-row">
+  <div>
+    <h1 class="page-title">Riwayat</h1>
+    <p class="page-sub" id="listCount"></p>
+  </div>
+  <div class="month-nav" id="historyMonthNav">
+    <button id="historyPrevMonth" aria-label="Bulan sebelumnya">‹</button>
+    <div class="month-label" id="historyMonthLabel">—</div>
+    <button id="historyNextMonth" aria-label="Bulan berikutnya">›</button>
+    <button class="today" id="historyTodayBtn">Bulan ini</button>
+  </div>
+</div>
 
         <div class="filters" id="filters">
           <div class="indicator" id="filterIndicator"></div>
@@ -1849,6 +2004,8 @@ let rangeMode = 'month';   // 'month' | 'range' | 'year' | 'all'
 let rangeFromKey = null;   // 'YYYY-MM'
 let rangeToKey = null;
 let rangeYearVal = null;
+// Bulan aktif untuk halaman Riwayat
+let historyDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
 /* =========================================================
    DATA VALIDATION & STORAGE
@@ -1926,6 +2083,10 @@ function monthTransactions() {
   const key = monthKeyOf(viewDate);
   return state.transactions.filter(t => t && typeof t.date === 'string' && t.date.startsWith(key));
 }
+function historyTransactions() {
+  const key = monthKeyOf(historyDate);
+  return state.transactions.filter(t => t && typeof t.date === 'string' && t.date.startsWith(key));
+}
 /* --- Range helper --- */
 function getAllMonthsBetween(fromKey, toKey) {
   const months = [];
@@ -1972,7 +2133,7 @@ function getRangeOpening() {
   return sum;
 }
 function getFilteredTxs() {
-  const txs = monthTransactions();
+  const txs = historyTransactions();
   if (currentFilter === 'all') return txs;
   if (currentFilter === 'income') return txs.filter(t => t.type === 'income');
   return txs.filter(t => t.type === 'expense' && t.category === currentFilter);
@@ -2447,8 +2608,8 @@ function renderList() {
     return (b.createdAt || 0) - (a.createdAt || 0);
   });
 
-  const countEl = document.getElementById('listCount');
-  const totalAll = monthTransactions().length;
+const countEl = document.getElementById('listCount');
+const totalAll = historyTransactions().length;
   if (countEl) {
     countEl.textContent = currentFilter === 'all'
       ? (totalAll ? `${totalAll} transaksi bulan ini` : 'Belum ada transaksi')
@@ -2585,6 +2746,13 @@ document.getElementById('txForm').addEventListener('submit', e => {
 state.transactions.push(tx);
 save();
 
+// Sinkronkan halaman Riwayat ke bulan transaksi baru
+const [txY, txM] = date.slice(0, 7).split('-').map(Number);
+if (txY && txM) {
+  historyDate = new Date(txY, txM - 1, 1);
+  renderHistoryMonthLabel();
+}
+
 amountInput.value = '';
 document.getElementById('noteInput').value = '';
 renderAll();
@@ -2629,6 +2797,44 @@ document.getElementById('filters').addEventListener('click', e => {
   positionFilterIndicator();
   renderList();
 });
+
+/* =========================================================
+   RIWAYAT — navigator bulan
+   ========================================================= */
+function renderHistoryMonthLabel() {
+  const el = document.getElementById('historyMonthLabel');
+  if (el) el.textContent = `${MONTHS[historyDate.getMonth()]} ${historyDate.getFullYear()}`;
+}
+
+function initHistoryNav() {
+  const prev = document.getElementById('historyPrevMonth');
+  const next = document.getElementById('historyNextMonth');
+  const today = document.getElementById('historyTodayBtn');
+
+  if (prev) prev.addEventListener('click', () => {
+    historyDate = new Date(historyDate.getFullYear(), historyDate.getMonth() - 1, 1);
+    renderHistoryMonthLabel();
+    renderList();
+    positionFilterIndicator();
+  });
+
+  if (next) next.addEventListener('click', () => {
+    historyDate = new Date(historyDate.getFullYear(), historyDate.getMonth() + 1, 1);
+    renderHistoryMonthLabel();
+    renderList();
+    positionFilterIndicator();
+  });
+
+  if (today) today.addEventListener('click', () => {
+    const n = new Date();
+    historyDate = new Date(n.getFullYear(), n.getMonth(), 1);
+    renderHistoryMonthLabel();
+    renderList();
+    positionFilterIndicator();
+  });
+
+  renderHistoryMonthLabel();
+}
 
 let _resizeTimer;
 window.addEventListener('resize', () => {
@@ -3187,6 +3393,7 @@ initTheme();
 setFormType('expense');
 initDateInput();
 initRangeUI();
+initHistoryNav();
 
 requestAnimationFrame(() => {
   try {
