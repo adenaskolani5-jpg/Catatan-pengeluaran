@@ -1505,6 +1505,115 @@
   #historyMonthNav .month-label { min-width: 88px; font-size: 10.5px; padding: 0 2px; }
   #historyMonthNav button.today { height: 24px; padding: 0 6px; font-size: 9.5px; }
 }
+/* ============================================================
+   RINCIAN DANA — Card baru di Dashboard
+   ============================================================ */
+.fund-card { margin-bottom: 16px; }
+.fund-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 14px 22px 20px;
+}
+.fund-item {
+  position: relative;
+  padding: 16px 16px 14px;
+  border-radius: 14px;
+  background: rgba(127,127,127,.045);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: border-color .25s;
+}
+.fund-item::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  opacity: .85;
+}
+.fund-item.non-gaji::before {
+  background: linear-gradient(90deg, var(--amber), var(--emerald));
+}
+.fund-item.gaji::before {
+  background: linear-gradient(90deg, var(--sky), var(--violet));
+}
+
+.fund-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 11px;
+}
+.fund-icon {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  background: rgba(127,127,127,.07);
+}
+.fund-item.non-gaji .fund-icon { color: var(--amber); }
+.fund-item.gaji     .fund-icon { color: var(--sky); }
+.fund-icon svg { width: 16px; height: 16px; }
+
+.fund-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  color: var(--text);
+  line-height: 1.2;
+}
+.fund-label small {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--mute);
+  margin-top: 2px;
+  letter-spacing: 0;
+}
+
+.fund-value {
+  font-size: clamp(15px, 3.1vw, 19px);
+  font-weight: 800;
+  letter-spacing: -.025em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+  transition: color .3s;
+}
+.fund-value.pos  { color: var(--emerald); }
+.fund-value.neg  { color: var(--rose); }
+.fund-value.zero { color: var(--dim); }
+
+.fund-bar {
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(127,127,127,.12);
+  margin: 10px 0 8px;
+  overflow: hidden;
+}
+.fund-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  width: 0;
+  background: var(--emerald);
+  transition: width .8s cubic-bezier(.2,.7,.3,1), background .3s;
+}
+
+.fund-sub {
+  font-size: 10.5px;
+  color: var(--mute);
+  line-height: 1.4;
+  font-weight: 500;
+}
+.fund-sub b { font-weight: 700; }
+
+@media (max-width: 720px) {
+  .fund-grid { grid-template-columns: 1fr; gap: 10px; padding: 12px 16px 16px; }
+  .fund-item { padding: 14px 14px 12px; }
+  .fund-label { font-size: 11.5px; }
+  .fund-value { font-size: 17px; }
+}
 </style>
 </head>
 <body data-page="dashboard">
@@ -1580,9 +1689,48 @@
             <div class="status-badge neutral" id="statusBadge">Belum ada transaksi</div>
             <div class="stat-sub" id="balanceSub" style="display:none"></div>
           </div>
-        </section>
+</section>
 
-        <section class="charts">
+<!-- ===== Rincian Dana ===== -->
+<div class="card fund-card">
+  <div class="card-head">
+    <div class="card-title">Rincian Dana<small>Alokasi pemasukan &amp; pemakaian</small></div>
+  </div>
+  <div class="fund-grid">
+    <div class="fund-item non-gaji">
+      <div class="fund-head">
+        <div class="fund-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="8" cy="8" r="6"/>
+            <path d="M18.09 10.37A6 6 0 1 1 10.34 18"/>
+            <path d="M7 6h1v4"/>
+            <path d="m16.71 13.88.7.71-2.82 2.82"/>
+          </svg>
+        </div>
+        <div class="fund-label">Non-Gaji<small>Tip · Bonus · Lainnya</small></div>
+      </div>
+      <div class="fund-value zero" id="nonGajiVal">Rp 0</div>
+      <div class="fund-bar"><div class="fund-bar-fill" id="nonGajiBar"></div></div>
+      <div class="fund-sub" id="nonGajiSub">Belum ada pemasukan non-gaji</div>
+    </div>
+    <div class="fund-item gaji">
+      <div class="fund-head">
+        <div class="fund-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2"/>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+          </svg>
+        </div>
+        <div class="fund-label">Gaji<small>Gaji utama</small></div>
+      </div>
+      <div class="fund-value zero" id="gajiVal">Rp 0</div>
+      <div class="fund-bar"><div class="fund-bar-fill" id="gajiBar"></div></div>
+      <div class="fund-sub" id="gajiSub">Belum ada pemasukan gaji</div>
+    </div>
+  </div>
+</div>
+
+<section class="charts">
           <div class="card">
             <div class="card-head">
               <div class="card-title">Pengeluaran harian<small>Hover / sentuh untuk lihat rincian</small></div>
@@ -2132,6 +2280,53 @@ function getRangeOpening() {
   getRangeMonths().forEach(m => { sum += state.opening[m] || 0; });
   return sum;
 }
+/* --- Alokasi Dana Non-Gaji vs Gaji --- */
+function computeFunds() {
+  const txs = getRangeTxs();
+
+  // === Pemasukan ===
+  const gaji = txs
+    .filter(t => t.type === 'income' && t.source === 'Gaji')
+    .reduce((s, t) => s + t.amount, 0);
+  const nonGaji = txs
+    .filter(t => t.type === 'income' && t.source !== 'Gaji')
+    .reduce((s, t) => s + t.amount, 0);
+
+  // === Pemakaian Non-Gaji (Jajan + Sosial) ===
+  const nonGajiUsed = txs
+    .filter(t => t.type === 'expense' &&
+      (t.category === 'Jajan' || t.category === 'Sosial'))
+    .reduce((s, t) => s + t.amount, 0);
+
+  // === Pemakaian Gaji (Kebutuhan) ===
+  const gajiUsed = txs
+    .filter(t => t.type === 'expense' && t.category === 'Kebutuhan')
+    .reduce((s, t) => s + t.amount, 0);
+
+  // === Hitung sisa + overflow ===
+  const nonGajiRaw = nonGaji - nonGajiUsed;     // bisa negatif
+  const overflow   = nonGajiRaw < 0 ? -nonGajiRaw : 0;
+  const nonGajiSisa = Math.max(0, nonGajiRaw);  // tampil min 0
+  const gajiSisa    = gaji - gajiUsed - overflow;
+
+  // === Progress bar (0..1) ===
+  const nonGajiProgress = nonGaji > 0
+    ? Math.min(1.4, nonGajiUsed / nonGaji)
+    : (nonGajiUsed > 0 ? 1 : 0);
+  const gajiSpent = gajiUsed + overflow;
+  const gajiProgress = gaji > 0
+    ? Math.min(1.4, gajiSpent / gaji)
+    : (gajiSpent > 0 ? 1 : 0);
+
+  return {
+    gaji, nonGaji,
+    nonGajiUsed, gajiUsed,
+    nonGajiRaw, overflow, nonGajiSisa, gajiSisa,
+    nonGajiProgress, gajiProgress,
+    hasAnyIncome: gaji > 0 || nonGaji > 0,
+    hasAnyTx: txs.length > 0
+  };
+}
 function getFilteredTxs() {
   const txs = historyTransactions();
   if (currentFilter === 'all') return txs;
@@ -2187,6 +2382,7 @@ function renderAll() {
   try {
     renderMonthLabel();
     renderStats();
+    renderFunds();
     renderCategoryTotals();
     renderCharts();
     renderList();
@@ -2244,6 +2440,91 @@ function renderStats() {
       sub.style.display = '';
       sub.innerHTML = `Saldo akhir: <b style="color:var(--text)">${fmtSigned(opening + balance)}</b>`;
     } else sub.style.display = 'none';
+  }
+}
+/* ---------- Rincian Dana ---------- */
+function colorForProgress(p) {
+  if (p >= 1)    return 'var(--rose)';
+  if (p >= 0.8)  return 'var(--amber)';
+  return 'var(--emerald)';
+}
+
+function renderFunds() {
+  const f = computeFunds();
+
+  // --- Non-Gaji ---
+  const ngVal = document.getElementById('nonGajiVal');
+  if (ngVal) {
+    ngVal.classList.remove('pos', 'neg', 'zero');
+    if (f.nonGajiRaw < 0) {
+      ngVal.textContent = fmtSigned(f.nonGajiRaw);
+      ngVal.classList.add('neg');
+    } else if (f.nonGajiRaw > 0) {
+      ngVal.textContent = fmtSigned(f.nonGajiRaw);
+      ngVal.classList.add('pos');
+    } else {
+      ngVal.textContent = fmtRp(0);
+      ngVal.classList.add('zero');
+    }
+  }
+
+  const ngSub = document.getElementById('nonGajiSub');
+  if (ngSub) {
+    if (f.nonGaji === 0 && f.nonGajiUsed === 0) {
+      ngSub.textContent = 'Belum ada pemasukan non-gaji';
+    } else if (f.overflow > 0) {
+      ngSub.innerHTML = `Defisit <b style="color:var(--rose)">${fmtRp(f.overflow)}</b> — ditutup dari Gaji`;
+    } else if (f.nonGajiUsed === 0) {
+      ngSub.innerHTML = `Tersedia <b style="color:var(--text)">${fmtRp(f.nonGaji)}</b>`;
+    } else {
+      ngSub.innerHTML = `Terpakai ${fmtRp(f.nonGajiUsed)} dari ${fmtRp(f.nonGaji)}`;
+    }
+  }
+
+  const ngBar = document.getElementById('nonGajiBar');
+  if (ngBar) {
+    const pct = Math.min(100, f.nonGajiProgress * 100);
+    ngBar.style.width = pct + '%';
+    ngBar.style.background = f.overflow > 0
+      ? 'var(--rose)'
+      : (f.nonGaji > 0 ? colorForProgress(f.nonGajiUsed / f.nonGaji) : 'var(--emerald)');
+  }
+
+  // --- Gaji ---
+  const gVal = document.getElementById('gajiVal');
+  if (gVal) {
+    gVal.classList.remove('pos', 'neg', 'zero');
+    if (f.gajiSisa < 0) {
+      gVal.textContent = fmtSigned(f.gajiSisa);
+      gVal.classList.add('neg');
+    } else if (f.gajiSisa > 0) {
+      gVal.textContent = fmtSigned(f.gajiSisa);
+      gVal.classList.add('pos');
+    } else {
+      gVal.textContent = fmtRp(0);
+      gVal.classList.add('zero');
+    }
+  }
+
+  const gSub = document.getElementById('gajiSub');
+  if (gSub) {
+    if (f.gaji === 0 && f.gajiUsed === 0 && f.overflow === 0) {
+      gSub.textContent = 'Belum ada pemasukan gaji';
+    } else {
+      const parts = [];
+      if (f.gajiUsed > 0) parts.push(`Kebutuhan ${fmtRp(f.gajiUsed)}`);
+      if (f.overflow  > 0) parts.push(`overflow ${fmtRp(f.overflow)}`);
+      gSub.textContent = parts.length ? `Terpakai ${parts.join(' + ')}` : 'Belum terpakai';
+    }
+  }
+
+  const gBar = document.getElementById('gajiBar');
+  if (gBar) {
+    const pct = Math.min(100, f.gajiProgress * 100);
+    gBar.style.width = pct + '%';
+    gBar.style.background = f.gajiSisa < 0
+      ? 'var(--rose)'
+      : (f.gaji > 0 ? colorForProgress((f.gajiUsed + f.overflow) / f.gaji) : 'var(--sky)');
   }
 }
 
@@ -3291,6 +3572,7 @@ function setRangeMode(mode) {
   updateBalanceStatLabel();
   updateRangeLabel();
   renderStats();
+  renderFunds();
   renderCharts();
 }
 
