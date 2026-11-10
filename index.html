@@ -1720,6 +1720,58 @@
 
 /* --- Row transaksi bisa diklik --- */
 .tx { cursor: pointer; }
+/* ============================================================
+   RIWAYAT — Mode Semua Bulan
+   ============================================================ */
+
+/* Tombol prev/next saat disabled */
+#historyMonthNav button:disabled {
+  opacity: .3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Tombol "Per Bulan" saat mode all aktif */
+#historyMonthNav button.today.active-all {
+  background: rgba(52,211,153,.14);
+  color: var(--emerald);
+  font-weight: 700;
+}
+
+/* Separator header bulan */
+.tx-month-separator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 4px 10px;
+  margin-top: 2px;
+}
+.tx-month-separator:first-child {
+  padding-top: 2px;
+}
+.tx-month-text {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--emerald);
+  flex: none;
+}
+.tx-month-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--border-2), transparent);
+}
+
+/* Mobile — pastikan kedua tombol tetap muat */
+@media (max-width: 480px) {
+  #historyMonthNav { flex-wrap: wrap; }
+  #historyMonthNav button.today {
+    padding: 0 5px;
+    font-size: 9px;
+  }
+  #historyMonthNav .month-label { min-width: 78px; font-size: 10px; }
+}
 </style>
 </head>
 <body data-page="dashboard">
@@ -1961,8 +2013,9 @@
     <button id="historyPrevMonth" aria-label="Bulan sebelumnya">‹</button>
     <div class="month-label" id="historyMonthLabel">—</div>
     <button id="historyNextMonth" aria-label="Bulan berikutnya">›</button>
-    <button class="today" id="historyTodayBtn">Bulan ini</button>
-  </div>
+<button class="today" id="historyTodayBtn">Bulan ini</button>
+<button class="today" id="historyAllBtn">Semua</button>
+</div>
 </div>
 
 <div class="search-wrap">
@@ -2384,6 +2437,8 @@ let rangeYearVal = null;
 let historyDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 // Pencarian riwayat
 let currentSearch = '';
+// Mode riwayat: bulan tunggal vs semua bulan
+let historyViewAll = false;
 
 /* =========================================================
    DATA VALIDATION & STORAGE
@@ -2558,7 +2613,7 @@ function computeFunds() {
   };
 }
 function getFilteredTxs() {
-  let txs = historyTransactions();
+  let txs = historyViewAll ? state.transactions.slice() : historyTransactions();
   if (currentFilter === 'income') {
     txs = txs.filter(t => t.type === 'income');
   } else if (currentFilter !== 'all') {
@@ -3136,10 +3191,14 @@ function renderList() {
   });
 
 const countEl = document.getElementById('listCount');
-const totalAll = historyTransactions().length;
+const totalAll = historyViewAll ? state.transactions.length : historyTransactions().length;
   if (countEl) {
-    if (currentFilter === 'all' && !currentSearch) {
-      countEl.textContent = totalAll ? `${totalAll} transaksi bulan ini` : 'Belum ada transaksi';
+    if (!txs.length && totalAll === 0) {
+      countEl.textContent = 'Belum ada transaksi';
+    } else if (currentFilter === 'all' && !currentSearch) {
+      countEl.textContent = historyViewAll
+        ? `${totalAll} transaksi total`
+        : `${totalAll} transaksi bulan ini`;
     } else {
       countEl.textContent = `${txs.length} dari ${totalAll} transaksi`;
     }
@@ -3147,13 +3206,14 @@ const totalAll = historyTransactions().length;
 
 if (!txs.length) {
   if (currentSearch) {
+    const where = historyViewAll ? 'di semua transaksi' : 'di bulan ini';
     el.innerHTML = `
       <div class="empty">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
         </svg>
         <div class="empty-title">Tidak ada hasil</div>
-        <div class="empty-sub">Kata kunci "<b>${escapeHtml(currentSearch)}</b>" tidak ditemukan di bulan ini.</div>
+        <div class="empty-sub">Kata kunci "<b>${escapeHtml(currentSearch)}</b>" tidak ditemukan ${where}.</div>
       </div>`;
     return;
   }
@@ -3170,14 +3230,31 @@ if (!txs.length) {
     return;
   }
 
-  const groups = {};
-  txs.forEach(t => { (groups[t.date] = groups[t.date] || []).push(t); });
+const groups = {};
+txs.forEach(t => { (groups[t.date] = groups[t.date] || []).push(t); });
 
-  el.innerHTML = Object.keys(groups).sort().reverse().map(date => {
-    const list = groups[date];
-    const d = new Date(date + 'T00:00:00');
-    if (isNaN(d.getTime())) return '';
-    const label = d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' });
+const sortedDates = Object.keys(groups).sort().reverse();
+
+el.innerHTML = sortedDates.map((date, i) => {
+  const list = groups[date];
+  const d = new Date(date + 'T00:00:00');
+  if (isNaN(d.getTime())) return '';
+
+  // Header bulan (hanya mode Semua)
+  let monthHeader = '';
+  if (historyViewAll) {
+    const curMonth = date.slice(0, 7);
+    const prevMonth = i > 0 ? sortedDates[i - 1].slice(0, 7) : null;
+    if (curMonth !== prevMonth) {
+      const [yy, mm] = curMonth.split('-').map(Number);
+      monthHeader = `<div class="tx-month-separator">
+        <span class="tx-month-text">${MONTHS[mm - 1]} ${yy}</span>
+        <span class="tx-month-line"></span>
+      </div>`;
+    }
+  }
+
+  const label = d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' });
     const dayExp = list.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
     const dayInc = list.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
     const parts = [];
@@ -3205,15 +3282,15 @@ return `
         </div>`;
     }).join('');
 
-    return `
-      <div class="tx-group">
-        <div class="tx-day-label">
-          <span>${label}</span>
-          <span class="day-sum">${parts.join(' · ')}</span>
-        </div>
-        ${items}
-      </div>`;
-  }).join('');
+  return monthHeader + `
+    <div class="tx-group">
+      <div class="tx-day-label">
+        <span>${label}</span>
+        <span class="day-sum">${parts.join(' · ')}</span>
+      </div>
+      ${items}
+    </div>`;
+}).join('');
 }
 
 /* =========================================================
@@ -3286,11 +3363,13 @@ document.getElementById('txForm').addEventListener('submit', e => {
 state.transactions.push(tx);
 save();
 
-// Sinkronkan halaman Riwayat ke bulan transaksi baru
-const [txY, txM] = date.slice(0, 7).split('-').map(Number);
-if (txY && txM) {
-  historyDate = new Date(txY, txM - 1, 1);
-  renderHistoryMonthLabel();
+// Sinkronkan halaman Riwayat ke bulan transaksi baru (hanya jika bukan mode Semua)
+if (!historyViewAll) {
+  const [txY, txM] = date.slice(0, 7).split('-').map(Number);
+  if (txY && txM) {
+    historyDate = new Date(txY, txM - 1, 1);
+    renderHistoryMonthLabel();
+  }
 }
 
 amountInput.value = '';
@@ -3392,13 +3471,17 @@ if (searchClear) {
    ========================================================= */
 function renderHistoryMonthLabel() {
   const el = document.getElementById('historyMonthLabel');
-  if (el) el.textContent = `${MONTHS[historyDate.getMonth()]} ${historyDate.getFullYear()}`;
+  if (!el) return;
+  el.textContent = historyViewAll
+    ? 'Semua Bulan'
+    : `${MONTHS[historyDate.getMonth()]} ${historyDate.getFullYear()}`;
 }
 
 function initHistoryNav() {
   const prev = document.getElementById('historyPrevMonth');
   const next = document.getElementById('historyNextMonth');
   const today = document.getElementById('historyTodayBtn');
+  const allBtn = document.getElementById('historyAllBtn');
 
   if (prev) prev.addEventListener('click', () => {
     historyDate = new Date(historyDate.getFullYear(), historyDate.getMonth() - 1, 1);
@@ -3415,6 +3498,7 @@ function initHistoryNav() {
   });
 
   if (today) today.addEventListener('click', () => {
+    if (historyViewAll) setHistoryViewAll(false);
     const n = new Date();
     historyDate = new Date(n.getFullYear(), n.getMonth(), 1);
     renderHistoryMonthLabel();
@@ -3422,7 +3506,31 @@ function initHistoryNav() {
     positionFilterIndicator();
   });
 
+  if (allBtn) allBtn.addEventListener('click', () => {
+    setHistoryViewAll(!historyViewAll);
+  });
+
   renderHistoryMonthLabel();
+}
+
+function setHistoryViewAll(active) {
+  historyViewAll = active;
+
+  const prev = document.getElementById('historyPrevMonth');
+  const next = document.getElementById('historyNextMonth');
+  const allBtn = document.getElementById('historyAllBtn');
+
+  if (prev) prev.disabled = active;
+  if (next) next.disabled = active;
+
+  if (allBtn) {
+    allBtn.textContent = active ? 'Per Bulan' : 'Semua';
+    allBtn.classList.toggle('active-all', active);
+  }
+
+  renderHistoryMonthLabel();
+  renderList();
+  positionFilterIndicator();
 }
 /* =========================================================
    EDIT TRANSAKSI
@@ -3563,7 +3671,8 @@ document.getElementById('editForm').addEventListener('submit', e => {
     delete tx.category;
   }
 
-  // Auto-sync ke bulan transaksi
+// Auto-sync ke bulan transaksi (hanya jika bukan mode Semua)
+if (!historyViewAll) {
   const txMonth = date.slice(0, 7);
   if (txMonth !== monthKeyOf(historyDate)) {
     const [y, m] = txMonth.split('-').map(Number);
@@ -3572,6 +3681,7 @@ document.getElementById('editForm').addEventListener('submit', e => {
       renderHistoryMonthLabel();
     }
   }
+}
 
   save();
   closeEditModal();
