@@ -1614,6 +1614,112 @@
   .fund-label { font-size: 11.5px; }
   .fund-value { font-size: 17px; }
 }
+/* ============================================================
+   TOAST ACTION + SEARCH + EDIT MODAL
+   ============================================================ */
+
+/* --- Toast action button --- */
+.toast-action {
+  padding: 5px 11px;
+  border-radius: 7px;
+  border: none;
+  background: rgba(52,211,153,.18);
+  color: var(--emerald);
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  pointer-events: auto;
+  font-family: inherit;
+  margin-left: 4px;
+  flex: none;
+  letter-spacing: -.005em;
+}
+.toast-action:hover { background: rgba(52,211,153,.28); }
+.toast-action:active { transform: scale(.95); }
+
+/* --- Search input --- */
+.search-wrap {
+  position: relative;
+  margin-bottom: 10px;
+}
+.search-wrap .search-icon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--mute);
+  pointer-events: none;
+  transition: color .2s;
+}
+.search-wrap:focus-within .search-icon { color: var(--emerald); }
+.search-input {
+  padding-left: 38px !important;
+  padding-right: 40px !important;
+  font-size: 13px !important;
+}
+.search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(127,127,127,.1);
+  color: var(--mute);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all .2s;
+  padding: 0;
+}
+.search-clear:hover {
+  background: rgba(251,113,133,.15);
+  color: var(--rose);
+}
+
+/* --- Edit modal --- */
+.edit-logo {
+  background: linear-gradient(135deg, var(--emerald), var(--sky)) !important;
+  color: #04131a !important;
+}
+.edit-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+.edit-actions .btn-primary {
+  margin-top: 0;
+  flex: 1;
+}
+.btn-secondary {
+  padding: 13px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border-2);
+  background: transparent;
+  color: var(--dim);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: inherit;
+  flex: none;
+}
+.btn-secondary:hover {
+  border-color: var(--border-2);
+  background: rgba(127,127,127,.08);
+  color: var(--text);
+}
+.btn-secondary:active { transform: scale(.98); }
+
+/* --- Row transaksi bisa diklik --- */
+.tx { cursor: pointer; }
 </style>
 </head>
 <body data-page="dashboard">
@@ -1859,7 +1965,16 @@
   </div>
 </div>
 
-        <div class="filters" id="filters">
+<div class="search-wrap">
+  <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="11" r="8"/>
+    <path d="m21 21-4.3-4.3"/>
+  </svg>
+  <input type="text" id="searchInput" class="input search-input" placeholder="Cari keterangan, kategori, nominal..." maxlength="60">
+  <button type="button" class="search-clear" id="searchClear" hidden aria-label="Hapus pencarian">×</button>
+</div>
+
+<div class="filters" id="filters">
           <div class="indicator" id="filterIndicator"></div>
           <button class="filter-chip active" data-filter="all">Semua</button>
           <button class="filter-chip" data-filter="Kebutuhan">Kebutuhan</button>
@@ -2056,7 +2171,107 @@
     </div>
   </div>
 </div>
-<div class="toast" id="toast"><span class="tdot"></span><span id="toastMsg"></span></div>
+<!-- ============ Modal Edit Transaksi ============ -->
+<div class="modal-overlay" id="editModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+    <button class="modal-close" id="editClose" aria-label="Tutup">×</button>
+    <div class="modal-scroll">
+      <div class="modal-hero">
+        <div class="about-logo edit-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </div>
+        <div class="about-hero-text">
+          <div class="about-name" id="editTitle">Edit Transaksi</div>
+          <div class="about-sub" id="editSubtitle">—</div>
+        </div>
+      </div>
+
+      <form id="editForm">
+        <div class="segmented" id="editTypeSwitch">
+          <button type="button" data-type="expense" class="active">Pengeluaran</button>
+          <button type="button" data-type="income">Pemasukan</button>
+        </div>
+
+        <div id="editExpenseFields">
+          <label class="field-label">Kategori</label>
+          <div class="cat-tabs" id="editCategoryTabs">
+            <button type="button" class="cat-tab" data-cat="Kebutuhan" style="--c:var(--sky)">
+              <span class="cat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+              </span>
+              <span class="cat-name">Kebutuhan</span>
+            </button>
+            <button type="button" class="cat-tab" data-cat="Jajan" style="--c:var(--amber)">
+              <span class="cat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><path d="M6 2v2"/><path d="M10 2v2"/><path d="M14 2v2"/></svg>
+              </span>
+              <span class="cat-name">Jajan</span>
+            </button>
+            <button type="button" class="cat-tab" data-cat="Sosial" style="--c:var(--violet)">
+              <span class="cat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12"/><rect x="2" y="7" width="20" height="5" rx="1"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+              </span>
+              <span class="cat-name">Sosial</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="editIncomeFields" hidden>
+          <div class="field">
+            <label class="field-label">Sumber</label>
+            <div class="chips" id="editSourceChips">
+              <button type="button" class="chip" data-src="Gaji">Gaji</button>
+              <button type="button" class="chip" data-src="Tip">Tip</button>
+              <button type="button" class="chip" data-src="Bonus">Bonus</button>
+              <button type="button" class="chip" data-src="Lainnya">Lainnya</button>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label">Periode</label>
+            <select id="editIncomeFreq" class="input">
+              <option value="Harian">Harian</option>
+              <option value="Mingguan">Mingguan</option>
+              <option value="Bulanan">Bulanan</option>
+              <option value="Sekali">Sekali</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:14px">
+          <label class="field-label" id="editNoteLabel">Keterangan</label>
+          <input id="editNoteInput" class="input" maxlength="60" placeholder="—">
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Nominal</label>
+            <div class="input-wrap">
+              <span class="input-prefix">Rp</span>
+              <input id="editAmountInput" class="input has-prefix" inputmode="numeric" placeholder="0">
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label">Tanggal</label>
+            <input id="editDateInput" type="date" class="input">
+          </div>
+        </div>
+
+        <div class="edit-actions">
+          <button type="button" class="btn-secondary" id="editCancelBtn">Batal</button>
+          <button type="submit" class="btn-primary">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast">
+  <span class="tdot"></span>
+  <span id="toastMsg"></span>
+  <button id="toastAction" class="toast-action" hidden>Batalkan</button>
+</div>
 
 <script>
 /* =========================================================
@@ -2090,8 +2305,21 @@ function goToPage(page) {
     b.classList.toggle('active', b.dataset.page === page));
   document.body.dataset.page = page;
 
-  try { sessionStorage.setItem('dompet-page', page); } catch (e) {}
-  window.scrollTo(0, 0);
+try { sessionStorage.setItem('dompet-page', page); } catch (e) {}
+window.scrollTo(0, 0);
+
+// Tutup modal edit kalau masih terbuka
+const em = document.getElementById('editModal');
+if (em && em.classList.contains('open')) closeEditModal();
+
+// Reset search saat keluar dari halaman Riwayat
+if (page !== 'history') {
+  const si = document.getElementById('searchInput');
+  const sc = document.getElementById('searchClear');
+  if (si && si.value) si.value = '';
+  if (sc) sc.hidden = true;
+  currentSearch = '';
+}
 
   if (page === 'dashboard') {
     requestAnimationFrame(() => {
@@ -2154,6 +2382,8 @@ let rangeToKey = null;
 let rangeYearVal = null;
 // Bulan aktif untuk halaman Riwayat
 let historyDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+// Pencarian riwayat
+let currentSearch = '';
 
 /* =========================================================
    DATA VALIDATION & STORAGE
@@ -2328,10 +2558,26 @@ function computeFunds() {
   };
 }
 function getFilteredTxs() {
-  const txs = historyTransactions();
-  if (currentFilter === 'all') return txs;
-  if (currentFilter === 'income') return txs.filter(t => t.type === 'income');
-  return txs.filter(t => t.type === 'expense' && t.category === currentFilter);
+  let txs = historyTransactions();
+  if (currentFilter === 'income') {
+    txs = txs.filter(t => t.type === 'income');
+  } else if (currentFilter !== 'all') {
+    txs = txs.filter(t => t.type === 'expense' && t.category === currentFilter);
+  }
+  if (currentSearch) {
+    const q = currentSearch.toLowerCase();
+    txs = txs.filter(t => {
+      const haystack = [
+        t.note || '',
+        t.category || '',
+        t.source || '',
+        t.freq || '',
+        String(t.amount)
+      ].join(' ').toLowerCase();
+      return haystack.includes(q);
+    });
+  }
+  return txs;
 }
 
 function animateValue(el, to, fmt, dur = 700) {
@@ -2892,13 +3138,26 @@ function renderList() {
 const countEl = document.getElementById('listCount');
 const totalAll = historyTransactions().length;
   if (countEl) {
-    countEl.textContent = currentFilter === 'all'
-      ? (totalAll ? `${totalAll} transaksi bulan ini` : 'Belum ada transaksi')
-      : `${txs.length} dari ${totalAll} transaksi`;
+    if (currentFilter === 'all' && !currentSearch) {
+      countEl.textContent = totalAll ? `${totalAll} transaksi bulan ini` : 'Belum ada transaksi';
+    } else {
+      countEl.textContent = `${txs.length} dari ${totalAll} transaksi`;
+    }
   }
 
-  if (!txs.length) {
-    const filterLabel = currentFilter === 'all' ? '' :
+if (!txs.length) {
+  if (currentSearch) {
+    el.innerHTML = `
+      <div class="empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+        </svg>
+        <div class="empty-title">Tidak ada hasil</div>
+        <div class="empty-sub">Kata kunci "<b>${escapeHtml(currentSearch)}</b>" tidak ditemukan di bulan ini.</div>
+      </div>`;
+    return;
+  }
+  const filterLabel = currentFilter === 'all' ? '' :
       currentFilter === 'income' ? ' pemasukan' : ` ${currentFilter.toLowerCase()}`;
     el.innerHTML = `
       <div class="empty">
@@ -2934,9 +3193,9 @@ const totalAll = historyTransactions().length;
       if (t.note) noteParts.push(t.note);
       if (isIncome && t.freq && t.freq !== 'Sekali') noteParts.push(t.freq);
       const note = noteParts.join(' · ');
-      return `
-        <div class="tx">
-          <div class="tx-icon" style="--c:${color}">${icon}</div>
+return `
+  <div class="tx" data-id="${escapeHtml(t.id)}">
+    <div class="tx-icon" style="--c:${color}">${icon}</div>
           <div class="tx-info">
             <div class="tx-title">${escapeHtml(title)}${isIncome && t.freq && t.freq !== 'Sekali' ? `<span class="tx-badge">${escapeHtml(t.freq)}</span>` : ''}</div>
             ${note ? `<div class="tx-note">${escapeHtml(note)}</div>` : ''}
@@ -3042,14 +3301,37 @@ if (window.innerWidth > 720) amountInput.focus();
 });
 
 document.getElementById('txList').addEventListener('click', e => {
-  const btn = e.target.closest('.tx-del');
-  if (!btn) return;
-  const id = btn.dataset.id;
-  if (!id) return;
-  state.transactions = state.transactions.filter(t => t.id !== id);
-  save();
-  renderAll();
-  toast('Transaksi dihapus');
+  // --- Hapus (dengan Undo) ---
+  const delBtn = e.target.closest('.tx-del');
+  if (delBtn) {
+    const id = delBtn.dataset.id;
+    if (!id) return;
+    const idx = state.transactions.findIndex(t => t.id === id);
+    if (idx === -1) return;
+
+    const deleted = { tx: state.transactions[idx], index: idx };
+    state.transactions.splice(idx, 1);
+    save();
+    renderAll();
+
+    toast('Transaksi dihapus', false, {
+      label: 'Batalkan',
+      onClick: () => {
+        if (state.transactions.some(t => t.id === deleted.tx.id)) return;
+        state.transactions.splice(Math.min(deleted.index, state.transactions.length), 0, deleted.tx);
+        save();
+        renderAll();
+        toast('Transaksi dikembalikan');
+      }
+    });
+    return;
+  }
+
+  // --- Edit (klik row) ---
+  const row = e.target.closest('.tx[data-id]');
+  if (row && row.dataset.id) {
+    openEditModal(row.dataset.id);
+  }
 });
 
 /* =========================================================
@@ -3078,6 +3360,32 @@ document.getElementById('filters').addEventListener('click', e => {
   positionFilterIndicator();
   renderList();
 });
+
+/* =========================================================
+   SEARCH RIWAYAT
+   ========================================================= */
+const searchInput = document.getElementById('searchInput');
+const searchClear = document.getElementById('searchClear');
+let _searchDebounce;
+
+if (searchInput) {
+  searchInput.addEventListener('input', e => {
+    clearTimeout(_searchDebounce);
+    currentSearch = e.target.value.trim();
+    if (searchClear) searchClear.hidden = !currentSearch;
+    _searchDebounce = setTimeout(() => renderList(), 120);
+  });
+}
+
+if (searchClear) {
+  searchClear.addEventListener('click', () => {
+    if (searchInput) searchInput.value = '';
+    currentSearch = '';
+    searchClear.hidden = true;
+    renderList();
+    if (searchInput) searchInput.focus();
+  });
+}
 
 /* =========================================================
    RIWAYAT — navigator bulan
@@ -3116,7 +3424,160 @@ function initHistoryNav() {
 
   renderHistoryMonthLabel();
 }
+/* =========================================================
+   EDIT TRANSAKSI
+   ========================================================= */
+let editingTxId = null;
 
+function openEditModal(id) {
+  const tx = state.transactions.find(t => t.id === id);
+  if (!tx) return;
+  editingTxId = id;
+
+  const isIncome = tx.type === 'income';
+
+  // Tipe
+  document.querySelectorAll('#editTypeSwitch button').forEach(b =>
+    b.classList.toggle('active', b.dataset.type === tx.type));
+  document.getElementById('editExpenseFields').hidden = isIncome;
+  document.getElementById('editIncomeFields').hidden = !isIncome;
+  document.getElementById('editNoteLabel').textContent = isIncome ? 'Catatan (opsional)' : 'Keterangan';
+
+  // Kategori / Sumber
+  if (isIncome) {
+    document.querySelectorAll('#editSourceChips .chip').forEach(c =>
+      c.classList.toggle('active', c.dataset.src === (tx.source || 'Lainnya')));
+    document.getElementById('editIncomeFreq').value = tx.freq || 'Sekali';
+  } else {
+    document.querySelectorAll('#editCategoryTabs .cat-tab').forEach(c =>
+      c.classList.toggle('active', c.dataset.cat === tx.category));
+  }
+
+  // Isi form
+  document.getElementById('editNoteInput').value = tx.note || '';
+  document.getElementById('editAmountInput').value = tx.amount.toLocaleString('id-ID');
+  document.getElementById('editDateInput').value = tx.date;
+
+  // Subtitle
+  const d = new Date(tx.date + 'T00:00:00');
+  const dateStr = isNaN(d.getTime())
+    ? tx.date
+    : d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  document.getElementById('editSubtitle').textContent = `Dibuat ${dateStr}`;
+
+  // Buka modal
+  const overlay = document.getElementById('editModal');
+  overlay.hidden = false;
+  requestAnimationFrame(() => overlay.classList.add('open'));
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEditModal() {
+  const overlay = document.getElementById('editModal');
+  if (!overlay) return;
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(() => { overlay.hidden = true; editingTxId = null; }, 260);
+}
+
+// Bind: tipe di edit modal
+document.getElementById('editTypeSwitch').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-type]');
+  if (!btn) return;
+  const type = btn.dataset.type;
+  document.querySelectorAll('#editTypeSwitch button').forEach(b =>
+    b.classList.toggle('active', b.dataset.type === type));
+  document.getElementById('editExpenseFields').hidden = type !== 'expense';
+  document.getElementById('editIncomeFields').hidden = type !== 'income';
+  document.getElementById('editNoteLabel').textContent = type === 'income' ? 'Catatan (opsional)' : 'Keterangan';
+});
+
+// Bind: kategori
+document.getElementById('editCategoryTabs').addEventListener('click', e => {
+  const tab = e.target.closest('.cat-tab');
+  if (!tab) return;
+  document.querySelectorAll('#editCategoryTabs .cat-tab').forEach(t =>
+    t.classList.toggle('active', t === tab));
+});
+
+// Bind: sumber
+document.getElementById('editSourceChips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  document.querySelectorAll('#editSourceChips .chip').forEach(c =>
+    c.classList.toggle('active', c === chip));
+});
+
+// Bind: format nominal
+document.getElementById('editAmountInput').addEventListener('input', e => {
+  const digits = e.target.value.replace(/\D/g, '');
+  if (digits.length > 15) return;
+  e.target.value = digits ? Number(digits).toLocaleString('id-ID') : '';
+});
+
+// Bind: close
+document.getElementById('editClose').addEventListener('click', closeEditModal);
+document.getElementById('editCancelBtn').addEventListener('click', closeEditModal);
+document.getElementById('editModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('editModal')) closeEditModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('editModal').classList.contains('open')) closeEditModal();
+});
+
+// Bind: submit edit
+document.getElementById('editForm').addEventListener('submit', e => {
+  e.preventDefault();
+  if (!editingTxId) return;
+  const tx = state.transactions.find(t => t.id === editingTxId);
+  if (!tx) return;
+
+  const activeType = document.querySelector('#editTypeSwitch button.active')?.dataset.type || 'expense';
+  const amount = Number(document.getElementById('editAmountInput').value.replace(/\D/g, ''));
+  const date = document.getElementById('editDateInput').value;
+  const note = document.getElementById('editNoteInput').value.trim();
+
+  if (!amount || amount <= 0 || !isFinite(amount)) {
+    toast('Nominal harus lebih dari 0', true);
+    return;
+  }
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    toast('Pilih tanggal transaksi', true);
+    return;
+  }
+
+  tx.type = activeType;
+  tx.amount = Math.round(amount);
+  tx.date = date;
+  tx.note = note;
+
+  if (activeType === 'expense') {
+    const activeCat = document.querySelector('#editCategoryTabs .cat-tab.active');
+    tx.category = activeCat ? activeCat.dataset.cat : 'Kebutuhan';
+    delete tx.source;
+    delete tx.freq;
+  } else {
+    const activeSrc = document.querySelector('#editSourceChips .chip.active');
+    tx.source = activeSrc ? activeSrc.dataset.src : 'Lainnya';
+    tx.freq = document.getElementById('editIncomeFreq').value || 'Sekali';
+    delete tx.category;
+  }
+
+  // Auto-sync ke bulan transaksi
+  const txMonth = date.slice(0, 7);
+  if (txMonth !== monthKeyOf(historyDate)) {
+    const [y, m] = txMonth.split('-').map(Number);
+    if (y && m) {
+      historyDate = new Date(y, m - 1, 1);
+      renderHistoryMonthLabel();
+    }
+  }
+
+  save();
+  closeEditModal();
+  renderAll();
+  toast('Transaksi diperbarui');
+});
 let _resizeTimer;
 window.addEventListener('resize', () => {
   clearTimeout(_resizeTimer);
@@ -3411,16 +3872,46 @@ document.getElementById('resetBtn').addEventListener('click', () => {
    TOAST
    ========================================================= */
 let toastTimer;
-function toast(msg, isErr) {
+let toastActionCallback = null;
+
+function toast(msg, isErr, action) {
   const el = document.getElementById('toast');
   const msgEl = document.getElementById('toastMsg');
+  const actionBtn = document.getElementById('toastAction');
   if (!el || !msgEl) return;
+
   msgEl.textContent = msg;
   el.classList.toggle('err', !!isErr);
+
+  if (action && actionBtn) {
+    actionBtn.textContent = action.label || 'Batalkan';
+    actionBtn.hidden = false;
+    toastActionCallback = action.onClick;
+  } else if (actionBtn) {
+    actionBtn.hidden = true;
+    toastActionCallback = null;
+  }
+
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+  const dur = action ? 5000 : 2400;
+  toastTimer = setTimeout(() => {
+    el.classList.remove('show');
+    if (actionBtn) actionBtn.hidden = true;
+    toastActionCallback = null;
+  }, dur);
 }
+
+// Bind tombol aksi toast (sekali saja)
+document.getElementById('toastAction').addEventListener('click', () => {
+  if (!toastActionCallback) return;
+  const cb = toastActionCallback;
+  toastActionCallback = null;
+  document.getElementById('toast').classList.remove('show');
+  document.getElementById('toastAction').hidden = true;
+  clearTimeout(toastTimer);
+  cb();
+});
 
 /* =========================================================
    TOOLTIP CHART (mouse + touch)
