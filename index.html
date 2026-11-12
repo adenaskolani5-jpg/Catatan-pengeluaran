@@ -1772,6 +1772,128 @@
   }
   #historyMonthNav .month-label { min-width: 78px; font-size: 10px; }
 }
+/* ============================================================
+   NATURE (Konsumsi vs Aset)
+   ============================================================ */
+
+/* --- Segmented Nature di form --- */
+.nature-segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.nature-segmented button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: rgba(127,127,127,.05);
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  transition: all .22s cubic-bezier(.2,.7,.3,1);
+  color: var(--dim);
+  text-align: left;
+  min-width: 0;
+  position: relative;
+}
+.nature-segmented button:hover {
+  border-color: var(--border-2);
+  transform: translateY(-1px);
+}
+.nature-segmented button:active { transform: translateY(0) scale(.98); }
+.nature-segmented button svg {
+  width: 16px;
+  height: 16px;
+  color: var(--mute);
+  transition: color .2s;
+}
+.nature-segmented button span {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -.005em;
+}
+.nature-segmented button small {
+  font-size: 10px;
+  color: var(--mute);
+  font-weight: 500;
+  line-height: 1.3;
+}
+.nature-segmented button.active {
+  border-color: var(--emerald);
+  background: rgba(52,211,153,.08);
+  box-shadow: 0 4px 14px -8px rgba(52,211,153,.6);
+}
+.nature-segmented button.active svg { color: var(--emerald); }
+.nature-segmented button[data-nature="Aset"].active {
+  border-color: var(--violet);
+  background: rgba(167,139,250,.08);
+  box-shadow: 0 4px 14px -8px rgba(167,139,250,.6);
+}
+.nature-segmented button[data-nature="Aset"].active svg { color: var(--violet); }
+
+/* --- Breakdown di kartu Pengeluaran --- */
+.stat-breakdown {
+  margin-top: 11px;
+  padding-top: 11px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.sb-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+}
+.sb-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: none;
+}
+.sb-name {
+  flex: 1;
+  color: var(--dim);
+  font-weight: 600;
+  letter-spacing: -.005em;
+}
+.sb-val {
+  color: var(--text);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+}
+
+/* --- Insight naratif --- */
+.stat-insight {
+  font-size: 10.5px;
+  color: var(--mute);
+  line-height: 1.45;
+  margin-top: 5px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  font-weight: 500;
+}
+.stat-insight b { color: var(--text); font-weight: 700; }
+.stat-insight .up { color: var(--rose); font-weight: 700; }
+.stat-insight .down { color: var(--emerald); font-weight: 700; }
+
+/* --- Badge Aset di Riwayat --- */
+.tx-badge.aset {
+  background: rgba(167,139,250,.14);
+  color: var(--violet);
+  border: 1px solid rgba(167,139,250,.22);
+}
+
+@media (max-width: 720px) {
+  .nature-segmented button { padding: 9px 10px; }
+  .nature-segmented button span { font-size: 12px; }
+  .nature-segmented button small { font-size: 9.5px; }
+}
 </style>
 </head>
 <body data-page="dashboard">
@@ -1836,11 +1958,24 @@
             <div class="stat-value" id="incomeVal">Rp 0</div>
             <div class="stat-sub" id="incomeSub">Belum ada pemasukan</div>
           </div>
-          <div class="stat expense">
-            <div class="stat-label"><span class="dot"></span>Pengeluaran</div>
-            <div class="stat-value" id="expenseVal">Rp 0</div>
-            <div class="stat-sub" id="expenseSub">Belum ada pengeluaran</div>
-          </div>
+<div class="stat expense">
+  <div class="stat-label"><span class="dot"></span>Pengeluaran</div>
+  <div class="stat-value" id="expenseVal">Rp 0</div>
+  <div class="stat-sub" id="expenseSub">Belum ada pengeluaran</div>
+  <div class="stat-breakdown" id="expenseBreakdown" hidden>
+    <div class="sb-row" id="sbKonsumsiRow">
+      <span class="sb-dot" style="background:var(--amber)"></span>
+      <span class="sb-name">Konsumsi</span>
+      <span class="sb-val" id="sbKonsumsiVal">Rp 0</span>
+    </div>
+    <div class="sb-row" id="sbAsetRow" hidden>
+      <span class="sb-dot" style="background:var(--violet)"></span>
+      <span class="sb-name">Aset</span>
+      <span class="sb-val" id="sbAsetVal">Rp 0</span>
+    </div>
+    <div class="stat-insight" id="expenseInsight" hidden></div>
+  </div>
+</div>
           <div class="stat balance">
             <div class="stat-label"><span class="dot"></span><span id="balanceStatLabel">Sisa bulan ini</span></div>
             <div class="stat-value zero" id="balanceVal">Rp 0</div>
@@ -1946,15 +2081,41 @@
                 <span class="cat-name">Jajan</span>
                 <span class="cat-total" id="catTotalJajan">Rp 0</span>
               </button>
-              <button type="button" class="cat-tab" data-cat="Sosial" style="--c:var(--violet)">
-                <span class="cat-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12"/><rect x="2" y="7" width="20" height="5" rx="1"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
-                </span>
-                <span class="cat-name">Sosial</span>
-                <span class="cat-total" id="catTotalSosial">Rp 0</span>
-              </button>
-            </div>
-          </div>
+    <button type="button" class="cat-tab" data-cat="Sosial" style="--c:var(--violet)">
+      <span class="cat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12"/><rect x="2" y="7" width="20" height="5" rx="1"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+      </span>
+      <span class="cat-name">Sosial</span>
+      <span class="cat-total" id="catTotalSosial">Rp 0</span>
+    </button>
+  </div>
+
+  <div class="field" style="margin-top:14px">
+    <label class="field-label">Sifat</label>
+    <div class="nature-segmented" id="natureSwitch">
+      <button type="button" class="active" data-nature="Konsumsi">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/>
+          <path d="M7 2v20"/>
+          <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3z"/>
+          <path d="M21 15v7"/>
+        </svg>
+        <span>Konsumsi</span>
+        <small>Habis pakai · berulang</small>
+      </button>
+      <button type="button" data-nature="Aset">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m7.5 4.27 9 5.15"/>
+          <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+          <path d="m3.3 7 8.7 5 8.7-5"/>
+          <path d="M12 22V12"/>
+        </svg>
+        <span>Aset</span>
+        <small>Awet · sekali beli</small>
+      </button>
+    </div>
+  </div>
+</div>
 
           <div id="incomeFields" hidden>
             <div class="field">
@@ -2032,8 +2193,10 @@
           <button class="filter-chip active" data-filter="all">Semua</button>
           <button class="filter-chip" data-filter="Kebutuhan">Kebutuhan</button>
           <button class="filter-chip" data-filter="Jajan">Jajan</button>
-          <button class="filter-chip" data-filter="Sosial">Sosial</button>
-          <button class="filter-chip" data-filter="income">Pemasukan</button>
+<button class="filter-chip" data-filter="Sosial">Sosial</button>
+<button class="filter-chip" data-filter="nature:Konsumsi">Konsumsi</button>
+<button class="filter-chip" data-filter="nature:Aset">Aset</button>
+<button class="filter-chip" data-filter="income">Pemasukan</button>
         </div>
 
         <div class="card list-card">
@@ -2267,12 +2430,38 @@
               <span class="cat-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12"/><rect x="2" y="7" width="20" height="5" rx="1"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
               </span>
-              <span class="cat-name">Sosial</span>
-            </button>
-          </div>
-        </div>
+      <span class="cat-name">Sosial</span>
+    </button>
+  </div>
 
-        <div id="editIncomeFields" hidden>
+  <div class="field" style="margin-top:14px">
+    <label class="field-label">Sifat</label>
+    <div class="nature-segmented" id="editNatureSwitch">
+      <button type="button" data-nature="Konsumsi">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/>
+          <path d="M7 2v20"/>
+          <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3z"/>
+          <path d="M21 15v7"/>
+        </svg>
+        <span>Konsumsi</span>
+        <small>Habis pakai · berulang</small>
+      </button>
+      <button type="button" data-nature="Aset">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m7.5 4.27 9 5.15"/>
+          <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+          <path d="m3.3 7 8.7 5 8.7-5"/>
+          <path d="M12 22V12"/>
+        </svg>
+        <span>Aset</span>
+        <small>Awet · sekali beli</small>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="editIncomeFields" hidden>
           <div class="field">
             <label class="field-label">Sumber</label>
             <div class="chips" id="editSourceChips">
@@ -2427,6 +2616,7 @@ let viewDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 let formType = 'expense';
 let formCat = 'Kebutuhan';
 let formSrc = 'Gaji';
+let formNature = 'Konsumsi';
 let currentFilter = 'all';
 // Range mode untuk statistik Dashboard
 let rangeMode = 'month';   // 'month' | 'range' | 'year' | 'all'
@@ -2460,6 +2650,7 @@ function sanitizeTx(t) {
     date: t.date,
     note: typeof t.note === 'string' ? t.note.slice(0, 60) : '',
     category: t.type === 'expense' ? t.category : undefined,
+nature: t.type === 'expense' ? (t.nature === 'Aset' ? 'Aset' : 'Konsumsi') : undefined,
     source: t.type === 'income' ? (typeof t.source === 'string' ? t.source.slice(0, 30) : 'Lainnya') : undefined,
     freq: t.type === 'income' ? (typeof t.freq === 'string' ? t.freq.slice(0, 20) : 'Sekali') : undefined,
     createdAt: typeof t.createdAt === 'number' ? t.createdAt : Date.now()
@@ -2616,6 +2807,9 @@ function getFilteredTxs() {
   let txs = historyViewAll ? state.transactions.slice() : historyTransactions();
   if (currentFilter === 'income') {
     txs = txs.filter(t => t.type === 'income');
+  } else if (currentFilter.startsWith('nature:')) {
+    const nature = currentFilter.slice(7);
+    txs = txs.filter(t => t.type === 'expense' && (t.nature || 'Konsumsi') === nature);
   } else if (currentFilter !== 'all') {
     txs = txs.filter(t => t.type === 'expense' && t.category === currentFilter);
   }
@@ -2710,10 +2904,13 @@ function renderStats() {
   const balance = income - expense;
   const opening = getRangeOpening();
 
-  animateValue(document.getElementById('incomeVal'), income, fmtRp);
-  animateValue(document.getElementById('expenseVal'), expense, fmtRp);
+animateValue(document.getElementById('incomeVal'), income, fmtRp);
+animateValue(document.getElementById('expenseVal'), expense, fmtRp);
 
-  const balEl = document.getElementById('balanceVal');
+// === Breakdown Konsumsi vs Aset ===
+renderExpenseBreakdown(txs, expense);
+
+const balEl = document.getElementById('balanceVal');
   animateValue(balEl, balance, fmtSigned);
   if (balEl) {
     balEl.classList.remove('neg', 'pos', 'zero');
@@ -3217,8 +3414,10 @@ if (!txs.length) {
       </div>`;
     return;
   }
-  const filterLabel = currentFilter === 'all' ? '' :
-      currentFilter === 'income' ? ' pemasukan' : ` ${currentFilter.toLowerCase()}`;
+let filterLabel = '';
+if (currentFilter === 'income') filterLabel = ' pemasukan';
+else if (currentFilter.startsWith('nature:')) filterLabel = ` ${currentFilter.slice(7).toLowerCase()}`;
+else if (currentFilter !== 'all') filterLabel = ` ${currentFilter.toLowerCase()}`;
     el.innerHTML = `
       <div class="empty">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
@@ -3274,7 +3473,7 @@ return `
   <div class="tx" data-id="${escapeHtml(t.id)}">
     <div class="tx-icon" style="--c:${color}">${icon}</div>
           <div class="tx-info">
-            <div class="tx-title">${escapeHtml(title)}${isIncome && t.freq && t.freq !== 'Sekali' ? `<span class="tx-badge">${escapeHtml(t.freq)}</span>` : ''}</div>
+            <div class="tx-title">${escapeHtml(title)}${isIncome && t.freq && t.freq !== 'Sekali' ? `<span class="tx-badge">${escapeHtml(t.freq)}</span>` : ''}${!isIncome && t.nature === 'Aset' ? `<span class="tx-badge aset">Aset</span>` : ''}</div>
             ${note ? `<div class="tx-note">${escapeHtml(note)}</div>` : ''}
           </div>
           <div class="tx-amount ${isIncome ? 'pos' : 'neg'}">${isIncome ? '+' : '−'}${fmtRp(t.amount)}</div>
@@ -3308,6 +3507,12 @@ function setFormType(type) {
   const ni = document.getElementById('noteInput');
   if (nl) nl.textContent = type === 'income' ? 'Catatan (opsional)' : 'Keterangan';
   if (ni) ni.placeholder = type === 'income' ? 'mis. gaji Oktober, tip akhir pekan' : 'mis. cilok, kopi, makan siang';
+
+  if (type === 'income') {
+    formNature = 'Konsumsi';
+    document.querySelectorAll('#natureSwitch button').forEach(b =>
+      b.classList.toggle('active', b.dataset.nature === 'Konsumsi'));
+  }
 }
 
 document.getElementById('typeSwitch').addEventListener('click', e => {
@@ -3321,12 +3526,12 @@ document.getElementById('categoryTabs').addEventListener('click', e => {
   document.querySelectorAll('#categoryTabs .cat-tab').forEach(t =>
     t.classList.toggle('active', t === tab));
 });
-document.getElementById('sourceChips').addEventListener('click', e => {
-  const chip = e.target.closest('.chip');
-  if (!chip) return;
-  formSrc = chip.dataset.src;
-  document.querySelectorAll('#sourceChips .chip').forEach(c =>
-    c.classList.toggle('active', c === chip));
+document.getElementById('natureSwitch').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-nature]');
+  if (!btn) return;
+  formNature = btn.dataset.nature;
+  document.querySelectorAll('#natureSwitch button').forEach(b =>
+    b.classList.toggle('active', b === btn));
 });
 
 const amountInput = document.getElementById('amountInput');
@@ -3347,6 +3552,68 @@ document.getElementById('openingBalance').addEventListener('input', e => {
   renderStats();
 });
 
+/* ---------- Breakdown Konsumsi vs Aset di kartu Pengeluaran ---------- */
+function renderExpenseBreakdown(txs, expenseTotal) {
+  const expenseKonsumsi = txs.filter(t => t.type === 'expense' && (t.nature || 'Konsumsi') === 'Konsumsi').reduce((s, t) => s + t.amount, 0);
+  const expenseAset = txs.filter(t => t.type === 'expense' && t.nature === 'Aset').reduce((s, t) => s + t.amount, 0);
+
+  const breakdown = document.getElementById('expenseBreakdown');
+  const sbKonsumsiRow = document.getElementById('sbKonsumsiRow');
+  const sbAsetRow = document.getElementById('sbAsetRow');
+  const insightEl = document.getElementById('expenseInsight');
+  if (!breakdown || !sbKonsumsiRow || !sbAsetRow) return;
+
+  if (expenseTotal === 0) {
+    breakdown.hidden = true;
+    return;
+  }
+
+  breakdown.hidden = false;
+  sbKonsumsiRow.hidden = expenseKonsumsi === 0;
+  sbAsetRow.hidden = expenseAset === 0;
+
+  const konsumsiVal = document.getElementById('sbKonsumsiVal');
+  const asetVal = document.getElementById('sbAsetVal');
+  if (konsumsiVal) konsumsiVal.textContent = fmtRp(expenseKonsumsi);
+  if (asetVal) asetVal.textContent = fmtRp(expenseAset);
+
+  // === Insight naratif (hanya mode "Bulan ini") ===
+  if (!insightEl) return;
+  if (rangeMode !== 'month') {
+    insightEl.hidden = true;
+    return;
+  }
+
+  const lastMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1);
+  const lastKey = monthKeyOf(lastMonth);
+  const lastTxs = state.transactions.filter(t => t.date.startsWith(lastKey) && t.type === 'expense');
+  const lastKonsumsi = lastTxs.filter(t => (t.nature || 'Konsumsi') === 'Konsumsi').reduce((s, t) => s + t.amount, 0);
+  const lastAset = lastTxs.filter(t => t.nature === 'Aset').reduce((s, t) => s + t.amount, 0);
+
+  if (lastKonsumsi > 0) {
+    const diff = expenseKonsumsi - lastKonsumsi;
+    const pct = Math.round((diff / lastKonsumsi) * 100);
+    let html = '';
+    if (Math.abs(pct) <= 1) {
+      html = `Konsumsi bulan ini <b>sama</b> dengan bulan lalu`;
+    } else if (pct > 0) {
+      html = `Konsumsi <span class="up">naik ${pct}%</span> dari bulan lalu`;
+    } else {
+      html = `Konsumsi <span class="down">turun ${Math.abs(pct)}%</span> dari bulan lalu`;
+    }
+    if (expenseAset > 0) {
+      html += `<br>Termasuk <b>${fmtRp(expenseAset)}</b> untuk aset baru (tidak berulang)`;
+    }
+    insightEl.innerHTML = html;
+    insightEl.hidden = false;
+  } else if (expenseAset > 0 && lastAset === 0) {
+    insightEl.innerHTML = `Bulan ini ada pembelian aset <b>${fmtRp(expenseAset)}</b> — sekali beli, tidak berulang`;
+    insightEl.hidden = false;
+  } else {
+    insightEl.hidden = true;
+  }
+}
+
 document.getElementById('txForm').addEventListener('submit', e => {
   e.preventDefault();
   const amount = Number(amountInput.value.replace(/\D/g, ''));
@@ -3356,10 +3623,14 @@ document.getElementById('txForm').addEventListener('submit', e => {
   if (!amount || amount <= 0 || !isFinite(amount)) { toast('Nominal harus lebih dari 0', true); amountInput.focus(); return; }
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) { toast('Pilih tanggal transaksi', true); return; }
 
-  const tx = { id: uid(), type: formType, amount: Math.round(amount), date, note, createdAt: Date.now() };
-  if (formType === 'expense') tx.category = formCat;
-  else { tx.source = formSrc; tx.freq = document.getElementById('incomeFreq').value || 'Sekali'; }
-
+const tx = { id: uid(), type: formType, amount: Math.round(amount), date, note, createdAt: Date.now() };
+if (formType === 'expense') {
+  tx.category = formCat;
+  tx.nature = formNature;
+} else {
+  tx.source = formSrc;
+  tx.freq = document.getElementById('incomeFreq').value || 'Sekali';
+}
 state.transactions.push(tx);
 save();
 
@@ -3374,6 +3645,10 @@ if (!historyViewAll) {
 
 amountInput.value = '';
 document.getElementById('noteInput').value = '';
+// Reset nature ke Konsumsi setelah submit (safety)
+formNature = 'Konsumsi';
+document.querySelectorAll('#natureSwitch button').forEach(b =>
+  b.classList.toggle('active', b.dataset.nature === 'Konsumsi'));
 renderAll();
 toast(formType === 'income' ? 'Pemasukan dicatat' : 'Pengeluaran dicatat');
 if (window.innerWidth > 720) amountInput.focus();
@@ -3556,10 +3831,13 @@ function openEditModal(id) {
     document.querySelectorAll('#editSourceChips .chip').forEach(c =>
       c.classList.toggle('active', c.dataset.src === (tx.source || 'Lainnya')));
     document.getElementById('editIncomeFreq').value = tx.freq || 'Sekali';
-  } else {
-    document.querySelectorAll('#editCategoryTabs .cat-tab').forEach(c =>
-      c.classList.toggle('active', c.dataset.cat === tx.category));
-  }
+} else {
+  document.querySelectorAll('#editCategoryTabs .cat-tab').forEach(c =>
+    c.classList.toggle('active', c.dataset.cat === tx.category));
+  const nat = tx.nature === 'Aset' ? 'Aset' : 'Konsumsi';
+  document.querySelectorAll('#editNatureSwitch button').forEach(b =>
+    b.classList.toggle('active', b.dataset.nature === nat));
+}
 
   // Isi form
   document.getElementById('editNoteInput').value = tx.note || '';
@@ -3598,6 +3876,15 @@ document.getElementById('editTypeSwitch').addEventListener('click', e => {
   document.getElementById('editExpenseFields').hidden = type !== 'expense';
   document.getElementById('editIncomeFields').hidden = type !== 'income';
   document.getElementById('editNoteLabel').textContent = type === 'income' ? 'Catatan (opsional)' : 'Keterangan';
+
+  // Kalau switch ke expense dan belum ada nature aktif, default ke Konsumsi
+  if (type === 'expense') {
+    const hasActive = document.querySelector('#editNatureSwitch button.active');
+    if (!hasActive) {
+      document.querySelectorAll('#editNatureSwitch button').forEach(b =>
+        b.classList.toggle('active', b.dataset.nature === 'Konsumsi'));
+    }
+  }
 });
 
 // Bind: kategori
@@ -3609,11 +3896,11 @@ document.getElementById('editCategoryTabs').addEventListener('click', e => {
 });
 
 // Bind: sumber
-document.getElementById('editSourceChips').addEventListener('click', e => {
-  const chip = e.target.closest('.chip');
-  if (!chip) return;
-  document.querySelectorAll('#editSourceChips .chip').forEach(c =>
-    c.classList.toggle('active', c === chip));
+document.getElementById('editNatureSwitch').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-nature]');
+  if (!btn) return;
+  document.querySelectorAll('#editNatureSwitch button').forEach(b =>
+    b.classList.toggle('active', b === btn));
 });
 
 // Bind: format nominal
@@ -3659,17 +3946,20 @@ document.getElementById('editForm').addEventListener('submit', e => {
   tx.date = date;
   tx.note = note;
 
-  if (activeType === 'expense') {
-    const activeCat = document.querySelector('#editCategoryTabs .cat-tab.active');
-    tx.category = activeCat ? activeCat.dataset.cat : 'Kebutuhan';
-    delete tx.source;
-    delete tx.freq;
-  } else {
-    const activeSrc = document.querySelector('#editSourceChips .chip.active');
-    tx.source = activeSrc ? activeSrc.dataset.src : 'Lainnya';
-    tx.freq = document.getElementById('editIncomeFreq').value || 'Sekali';
-    delete tx.category;
-  }
+if (activeType === 'expense') {
+  const activeCat = document.querySelector('#editCategoryTabs .cat-tab.active');
+  tx.category = activeCat ? activeCat.dataset.cat : 'Kebutuhan';
+  const activeNat = document.querySelector('#editNatureSwitch button.active');
+  tx.nature = activeNat ? activeNat.dataset.nature : 'Konsumsi';
+  delete tx.source;
+  delete tx.freq;
+} else {
+  const activeSrc = document.querySelector('#editSourceChips .chip.active');
+  tx.source = activeSrc ? activeSrc.dataset.src : 'Lainnya';
+  tx.freq = document.getElementById('editIncomeFreq').value || 'Sekali';
+  delete tx.category;
+  delete tx.nature;
+}
 
 // Auto-sync ke bulan transaksi (hanya jika bukan mode Semua)
 if (!historyViewAll) {
@@ -3853,10 +4143,12 @@ document.getElementById('exportPdf').addEventListener('click', () => {
     if (!window.jspdf || !window.jspdf.jsPDF) { toast('Library PDF belum siap', true); return; }
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    const txs = monthTransactions().slice().sort((a, b) => a.date.localeCompare(b.date));
-    const income = txs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-    const expense = txs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-    const balance = income - expense;
+const txs = monthTransactions().slice().sort((a, b) => a.date.localeCompare(b.date));
+const income = txs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+const expense = txs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+const expenseKonsumsi = txs.filter(t => t.type === 'expense' && (t.nature || 'Konsumsi') === 'Konsumsi').reduce((s, t) => s + t.amount, 0);
+const expenseAset = txs.filter(t => t.type === 'expense' && t.nature === 'Aset').reduce((s, t) => s + t.amount, 0);
+const balance = income - expense;
 
     doc.setFontSize(18); doc.setFont(undefined, 'bold');
     doc.text('Laporan Keuangan Dompet', 14, 20);
@@ -3866,24 +4158,35 @@ document.getElementById('exportPdf').addEventListener('click', () => {
     doc.setFontSize(11); doc.setFont(undefined, 'bold');
     doc.text('Ringkasan', 14, 46);
     doc.setFont(undefined, 'normal');
-    doc.text(`Pemasukan  : ${fmtRp(income)}`, 14, 54);
-    doc.text(`Pengeluaran: ${fmtRp(expense)}`, 14, 61);
-    doc.text(`Sisa       : ${fmtRp(balance)}${balance < 0 ? ' (minus)' : ''}`, 14, 68);
+doc.text(`Pemasukan  : ${fmtRp(income)}`, 14, 54);
+doc.text(`Pengeluaran: ${fmtRp(expense)}`, 14, 61);
+doc.text(`  ├ Konsumsi: ${fmtRp(expenseKonsumsi)}`, 14, 68);
+doc.text(`  └ Aset    : ${fmtRp(expenseAset)}`, 14, 75);
+doc.text(`Sisa       : ${fmtRp(balance)}${balance < 0 ? ' (minus)' : ''}`, 14, 82);
 
-    const rows = txs.map(t => [
-      t.date,
-      t.type === 'income' ? 'Masuk' : 'Keluar',
-      t.type === 'income' ? (t.source || '-') : t.category,
-      t.note || '-',
-      (t.type === 'income' ? '+' : '-') + fmtRp(t.amount)
-    ]);
-    doc.autoTable({
-      head: [['Tanggal', 'Tipe', 'Kategori/Sumber', 'Keterangan', 'Nominal']],
-      body: rows, startY: 78,
-      styles: { fontSize: 8.5, cellPadding: 2.5 },
-      headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [245, 247, 251] }
-    });
+const rows = txs.map(t => [
+  t.date,
+  t.type === 'income' ? 'Masuk' : 'Keluar',
+  t.type === 'income' ? (t.source || '-') : t.category,
+  t.type === 'expense' ? (t.nature || 'Konsumsi') : '-',
+  t.note || '-',
+  (t.type === 'income' ? '+' : '-') + fmtRp(t.amount)
+]);
+doc.autoTable({
+  head: [['Tanggal', 'Tipe', 'Kategori/Sumber', 'Sifat', 'Keterangan', 'Nominal']],
+  body: rows, startY: 92,
+  styles: { fontSize: 8, cellPadding: 2 },
+  columnStyles: {
+    0: { cellWidth: 21 },
+    1: { cellWidth: 15 },
+    2: { cellWidth: 26 },
+    3: { cellWidth: 18 },
+    4: { cellWidth: 'auto' },
+    5: { cellWidth: 24 }
+  },
+  headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
+  alternateRowStyles: { fillColor: [245, 247, 251] }
+});
     doc.save(`dompet-${monthKeyOf(viewDate)}.pdf`);
     toast('PDF berhasil dibuat');
   } catch (err) { console.error(err); toast('Gagal membuat PDF', true); }
@@ -3893,22 +4196,29 @@ document.getElementById('exportXlsx').addEventListener('click', () => {
   try {
     if (typeof XLSX === 'undefined') { toast('Library Excel belum siap', true); return; }
     const txs = monthTransactions().slice().sort((a, b) => a.date.localeCompare(b.date));
-    const income = txs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-    const expense = txs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-    const ws = XLSX.utils.aoa_to_sheet([
-      ['Laporan Keuangan Dompet'],
-      [`Periode: ${MONTHS[viewDate.getMonth()]} ${viewDate.getFullYear()}`],
-      [], ['Ringkasan'],
-      ['Pemasukan', income], ['Pengeluaran', expense], ['Sisa', income - expense],
-      [], ['Tanggal', 'Tipe', 'Kategori/Sumber', 'Keterangan', 'Nominal'],
-      ...txs.map(t => [
-        t.date,
-        t.type === 'income' ? 'Pemasukan' : 'Pengeluaran',
-        t.type === 'income' ? (t.source || '-') : t.category,
-        t.note || '-', t.amount
-      ])
-    ]);
-    ws['!cols'] = [{ wch: 12 }, { wch: 14 }, { wch: 18 }, { wch: 30 }, { wch: 14 }];
+const income = txs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+const expense = txs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+const expenseKonsumsi = txs.filter(t => t.type === 'expense' && (t.nature || 'Konsumsi') === 'Konsumsi').reduce((s, t) => s + t.amount, 0);
+const expenseAset = txs.filter(t => t.type === 'expense' && t.nature === 'Aset').reduce((s, t) => s + t.amount, 0);
+const ws = XLSX.utils.aoa_to_sheet([
+  ['Laporan Keuangan Dompet'],
+  [`Periode: ${MONTHS[viewDate.getMonth()]} ${viewDate.getFullYear()}`],
+  [], ['Ringkasan'],
+  ['Pemasukan', income],
+  ['Pengeluaran', expense],
+  ['  - Konsumsi', expenseKonsumsi],
+  ['  - Aset', expenseAset],
+  ['Sisa', income - expense],
+  [], ['Tanggal', 'Tipe', 'Kategori/Sumber', 'Sifat', 'Keterangan', 'Nominal'],
+  ...txs.map(t => [
+    t.date,
+    t.type === 'income' ? 'Pemasukan' : 'Pengeluaran',
+    t.type === 'income' ? (t.source || '-') : t.category,
+    t.type === 'expense' ? (t.nature || 'Konsumsi') : '-',
+    t.note || '-', t.amount
+  ])
+]);
+ws['!cols'] = [{ wch: 12 }, { wch: 14 }, { wch: 18 }, { wch: 12 }, { wch: 30 }, { wch: 14 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Laporan');
     XLSX.writeFile(wb, `dompet-${monthKeyOf(viewDate)}.xlsx`);
