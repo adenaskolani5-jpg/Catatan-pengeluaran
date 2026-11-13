@@ -430,15 +430,44 @@
     margin-bottom: 7px;
   }
   .chips { display: flex; gap: 6px; flex-wrap: wrap; }
-  .chip {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 8px 13px; border-radius: 10px; cursor: pointer;
-    background: rgba(127,127,127,.05); border: 1px solid var(--border);
-    color: var(--dim); font-size: 12px; font-weight: 600;
-    transition: all .2s;
-  }
-  .chip:hover { border-color: var(--border-2); color: var(--text); }
-  .chip.active { background: rgba(127,127,127,.14); border-color: var(--border-2); color: var(--text); }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 13px; border-radius: 10px; cursor: pointer;
+  background: rgba(127,127,127,.05); border: 1.5px solid var(--border);
+  color: var(--dim); font-size: 12px; font-weight: 600;
+  transition: all .22s cubic-bezier(.2,.7,.3,1);
+  position: relative;
+  letter-spacing: -.005em;
+}
+.chip:hover {
+  border-color: var(--border-2);
+  color: var(--text);
+  transform: translateY(-1px);
+}
+.chip:active {
+  transform: translateY(0) scale(.97);
+}
+.chip.active {
+  background: linear-gradient(135deg, #34d399, #10b981 60%, #059669);
+  color: #04131a;
+  border-color: transparent;
+  box-shadow: 0 6px 20px -8px rgba(52,211,153,.7),
+              inset 0 1px 0 rgba(255,255,255,.3);
+  transform: translateY(-1px);
+  font-weight: 700;
+}
+.chip.active:hover {
+  box-shadow: 0 8px 24px -8px rgba(52,211,153,.85),
+              inset 0 1px 0 rgba(255,255,255,.35);
+  color: #04131a;
+}
+[data-theme="light"] .chip.active {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  box-shadow: 0 6px 20px -8px rgba(5,150,105,.5),
+              inset 0 1px 0 rgba(255,255,255,.35);
+}
+[data-theme="light"] .chip.active:hover { color: #ffffff; }
 
   .input {
     width: 100%; padding: 11px 13px; border-radius: 11px;
@@ -3526,6 +3555,13 @@ document.getElementById('categoryTabs').addEventListener('click', e => {
   document.querySelectorAll('#categoryTabs .cat-tab').forEach(t =>
     t.classList.toggle('active', t === tab));
 });
+document.getElementById('sourceChips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  formSrc = chip.dataset.src;
+  document.querySelectorAll('#sourceChips .chip').forEach(c =>
+    c.classList.toggle('active', c === chip));
+});
 document.getElementById('natureSwitch').addEventListener('click', e => {
   const btn = e.target.closest('button[data-nature]');
   if (!btn) return;
@@ -3895,12 +3931,20 @@ document.getElementById('editCategoryTabs').addEventListener('click', e => {
     t.classList.toggle('active', t === tab));
 });
 
-// Bind: sumber
+// Bind: nature
 document.getElementById('editNatureSwitch').addEventListener('click', e => {
   const btn = e.target.closest('button[data-nature]');
   if (!btn) return;
   document.querySelectorAll('#editNatureSwitch button').forEach(b =>
     b.classList.toggle('active', b === btn));
+});
+
+// Bind: sumber (edit modal)
+document.getElementById('editSourceChips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  document.querySelectorAll('#editSourceChips .chip').forEach(c =>
+    c.classList.toggle('active', c === chip));
 });
 
 // Bind: format nominal
